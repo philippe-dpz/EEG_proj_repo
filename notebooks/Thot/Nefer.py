@@ -3,15 +3,15 @@
 import pandas as pd
 import numpy as np
 
-import time, mne
+import math, time, mne
 
 from zipfile import ZipFile
 from scipy import signal, stats
 
 ### Différentes fonctions 
 
-type Index  = list[int] | range
 type Clause = list[str]
+type Index  = list[int] | range
 type Vector = list[float] | np.ndarray
 type Board  = pd.Series | pd.DataFrame
 
