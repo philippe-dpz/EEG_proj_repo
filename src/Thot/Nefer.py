@@ -3,27 +3,15 @@
 import pandas as pd
 import numpy as np
 
-import time, mne
+import math, time, mne
 
 from zipfile import ZipFile
 from scipy import signal, stats
 
-import matplotlib.pyplot as plt
-
-# %matplotlib inline
-
-# from matplotlib.patches import Rectangle
-
-# from sklearn import preprocessing, model_selection, ensemble, svm, neighbors
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.ensemble import VotingClassifier
-# from sklearn.decomposition import PCA
-# from sklearn.model_selection import train_test_split
-
 ### Différentes fonctions 
 
-type Index  = list[int]
 type Clause = list[str]
+type Index  = list[int] | range
 type Vector = list[float] | np.ndarray
 type Board  = pd.Series | pd.DataFrame
 
@@ -79,6 +67,23 @@ def pickle_in_zip(fichier_zip : str, fichier_specifique : str) -> Board :
 def butter_bandpass(lowcut : float, highcut : float, fs : float,
                     order : int | None = 4) -> tuple[Vector, Vector] :
     return signal.butter(order, 2 * np.array([lowcut, highcut]) / fs, btype = 'band')
+
+### 
+def hand_out(data : Board | Vector, events : Index, width : int, channels : Clause,
+             hand : int | None = 0, expend : int | None = 0) -> Board :
+    extra  = pd.DataFrame()
+    width += 2 * expend
+    signal = [f'S_{i}' for i in range(width)]
+    
+    for i in events :
+        ixp  = i - expend
+        span = range(ixp, ixp + width)
+        part = [{**{'data_split' : ixp},
+                 **dict(zip(signal, data.loc[span, c])),
+                 **{'hand' : hand, f'{c}_dum' : 1}} for c in channels]
+        extra = pd.concat([extra, pd.DataFrame(part)])
+
+    return extra
 
 ### Pour récupérer les évènement relatifs à la survenue d'une action associcée aux mains
 def share_out(data : Board | Vector, event0 : Index, event1 : Index, size : int,
@@ -155,23 +160,6 @@ def find_peaks_pos(data : Board | Vector, scope : int) -> tuple[Index, Index] :
 ###
 def compare(A : Board | Vector, B : Board | Vector) -> Board :
     return pd.DataFrame({'A' : list(A), 'B' : list(B)})
-
-### 
-def hand_out(data : Board | Vector, events : Index, width : int, channels : Clause,
-             hand : int | None = 0, expend : int | None = 0) -> Board :
-    extra  = pd.DataFrame()
-    width  += 2 * expend
-    signal = [f'S_{i}' for i in range(width)]
-    
-    for i in events :
-        i   -= expend
-        span = range(i, i + width)
-        part = [{**{'data_split' : i},
-                 **dict(zip(signal, data.loc[span, c])),
-                 **{'hand' : hand, f'{c}_dum' : 1}} for c in channels]
-        extra  = pd.concat([extra, pd.DataFrame(part)])
-
-    return extra
 
 ###
 def full_event(data : Board | Vector, tracks : list[Index], flatten : bool = True) -> Vector :

@@ -152,14 +152,14 @@ def plot_wavelets_z(df : Board, coeffs : dict[str, tuple[float, float]], Channel
 
 ### Visualiser le signal original et les bandes de fréquences filtrées
 def plot_wavelets(data : Board, coeffs : dict[str, tuple[float, float]], Channels : Clause,
-                  scope : int = -1, titled : Clause | None = None) -> None :
+                  scope : int = -1, headers : Clause | None = None) -> None :
     count  = len(data.index)
     pw     = int(abs(scope) * count * .1 ** int(math.log10(count)))
     scope  = pw if scope < 0 else scope
     sample = np.random.default_rng().integers(count, size = scope)
     
     n_tick = len(data.iloc[0, 0])
-    n_titl = count // len(titled)
+    n_titl = count // len(headers)
     n      = len(Channels)
     _, ax  = plt.subplots(nrows = 2 * scope, ncols = n,
                           figsize = (6.5 * n, 3.6 * scope), sharex = 0)
@@ -169,11 +169,11 @@ def plot_wavelets(data : Board, coeffs : dict[str, tuple[float, float]], Channel
     for i, k in enumerate(sample) :
         n       = k // n_titl
         x_ticks = range(n, n + n_tick)
-        lexem   = f"{titled[n]} - " if titled != None else ''
+        lexem   = f"{headers[n]} - " if headers != None else ''
         
         for j, col in enumerate(Channels) :
             view    = ax[2 * i + 0, j]
-            bw      = normalized(data[col][k])
+            bw      = data[col][k]      # normalized(data[col][k])
             signals = {band : bandpass_filter(bw, b, a) for band, (b, a) in coeffs.items()}
             
             view.plot(pd.Series(bw, x_ticks), label = 'Raw signal')
