@@ -190,14 +190,14 @@ def simple_thresholding(data : Board | Vector) -> tuple[float, Vector] :
     return peak, data / peak
 
 ###
-def mne_from_raw(data : Board | Vector, channels : Clause | str,
-                 sf : int) -> mne.io.RawArray :
+def mne_from_raw(data : Board | Vector, channels : Clause | str, sf : int) -> mne.io.RawArray :
     info = mne.create_info(ch_names = channels, sfreq = sf, ch_types = 'eeg')
     
     return mne.io.RawArray(data.T * 1e-6, info);
 
 ###
-def normalized(data : Board | Vector) -> Board | Vector : return stats.zscore(data)
+def normalized(data : Board | Vector) -> Board | Vector :
+    return stats.zscore(data)
 
 def filename(data : Clause, start : str = '/', end : str = '.') -> Clause :
     return [X[max(X.rfind(start), 0) : min(max(X.rfind(end), 0), len(X))] for X in data]

@@ -1,8 +1,7 @@
 ### Ploting
-from .Nefer import *
+from .nefer import *
 
 import matplotlib.pyplot as plt
-
 from matplotlib.patches import Rectangle
 
 ###
@@ -33,38 +32,38 @@ def spectrogram_from_EEG(data : Board | Vector, Sampling_rate : int, prior_cut_o
     plt.xlabel("Time (sec)")
 
 ###
-def plot_psd(datas : list[Board], event_type : Board, rate : int,
-             Channels : Clause, titled : Clause | None = None) -> None :
+def plot_psd(datas : list[Board], event_type : list[Board], rate : int,
+             Channels : Clause, titled : Clause | None = None, nfft : int = 1 << 9) -> None :
     n = len(datas)  # 
-    k = 1 << 9      # Taille de la fenètre pour la FFT
 
-    fig, ax = plt.subplots(nrows = n, ncols = 3, figsize = (20, n * 2.5))
+    _, ax = plt.subplots(nrows = n, ncols = 3, figsize = (20, n * 2.5))
 
-    fig.tight_layout(pad = 3.5)
+    n = range(len(event_type))
+    # k = 1 << 9      # Taille de la fenètre pour la FFT
 
-    for i, df in enumerate(datas) :
+    for i, Y in enumerate(datas) :
         view = ax[i, 0]
         lexm = '' if titled == None else titled[i]
         
         view.set_title(lexm)
 
         for c in Channels :
-            view.psd(df[c], NFFT = k, Fs = rate, label = c)
+            view.psd(Y[c], NFFT = nfft, Fs = rate, label = c)
 
         view.legend(loc = 'upper right');
 
-        for j in range(2) :
+        for j in n :
             view = ax[i, j + 1]
+            df  = event_type[j].iloc[range(i * 60, (i + 1) * 60), :]
 
-            view.set_title(f'{lexm} - Main ({j})')
-
+            view.set_title(f'Evènement {j}') # {lexm} - 
+            
             for c in Channels :
-                shape = normalized(event_type.loc[i, f'{c}_{j}'])
-
-                view.psd(shape, NFFT = k, Fs = rate, label = c)
+                view.psd(np.array(df[c]).flatten().tolist(), NFFT = nfft, Fs = rate, label = c)
 
             view.legend(loc = 'upper right');
 
+    plt.tight_layout(pad = 3.5)
     plt.show();
 
 ###
