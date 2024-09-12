@@ -3,12 +3,10 @@
 import pandas as pd
 import numpy as np
 
-import math, time, mne
+import time, mne
 
 from zipfile import ZipFile
 from scipy import signal, stats
-
-### Différentes fonctions 
 
 type Clause = list[str]
 type Index  = list[int] | range

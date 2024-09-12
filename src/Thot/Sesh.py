@@ -33,7 +33,7 @@ def spectrogram_from_EEG(data : Board | Vector, Sampling_rate : int, prior_cut_o
 
 ###
 def plot_psd(datas : list[Board], event_type : list[Board], rate : int,
-             Channels : Clause, titled : Clause | None = None, nfft : int = 1 << 9) -> None :
+             Channels : Clause, titled : Clause | None = None) -> None : # , nfft : int = 1 << 9
     n = len(datas)  # 
 
     _, ax = plt.subplots(nrows = n, ncols = 3, figsize = (16, n * 2.5))
@@ -47,9 +47,10 @@ def plot_psd(datas : list[Board], event_type : list[Board], rate : int,
         view.set_title(lexm)
 
         for c in Channels :
-            view.psd(Y[c], NFFT = nfft, Fs = rate, label = c)
+            view.psd(Y[c], Fs = rate, label = c) #, NFFT = nfft
 
-        view.legend(loc = 'upper right');
+        view.legend(loc = 'upper right')
+        view.set_ylabel('PSD (v²/hz)');
 
         for j in n :
             view = ax[i, j + 1]
@@ -58,9 +59,11 @@ def plot_psd(datas : list[Board], event_type : list[Board], rate : int,
             view.set_title(f'Evènement {j}')
             
             for c in Channels :
-                view.psd(np.array(df[c]).flatten().tolist(), NFFT = nfft, Fs = rate, label = c)
+                view.psd(np.array(df[c]).flatten().tolist(), Fs = rate, label = c) #, NFFT = nfft
 
-            view.legend(loc = 'upper right');
+            view.legend(loc = 'upper right')
+            view.set_xlabel('')
+            view.set_ylabel('');
 
     plt.tight_layout()  # pad = 3.5
     plt.show();
@@ -150,9 +153,9 @@ def plot_wavelets_z(df : Board, coeffs : dict[str, tuple[float, float]], Channel
 
 ### Visualiser le signal original et les bandes de fréquences filtrées
 def plot_wavelets(data : Board, coeffs : dict[str, tuple[float, float]], Channels : Clause,
-                  scope : int = -1, headers : Clause | None = None) -> None :
+                  scope : Index | int = -1, headers : Clause | None = None) -> None :
     count  = len(data.index)
-    pw     = int(abs(scope) * count * .1 ** int(math.log10(count)))
+    pw     = int(abs(scope) * count * .1 ** int(np.log10(count)))
     scope  = pw if scope < 0 else scope
     sample = np.random.default_rng().integers(count, size = scope)
     
