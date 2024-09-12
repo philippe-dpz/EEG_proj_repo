@@ -27,6 +27,25 @@ def temps_execution(function : any) -> any:
     return timer
 
 ###
+def samples(n : int, size : float = 1e-1) -> Index :
+    res = np.random.choice(n, size = n * 10 if size < 1 else size)
+
+    res.sort()
+    
+    return res
+
+### 
+def random_filter(scope : int | Index, count : int | None = None) -> [int, Index] : # type: ignore
+    if type(scope) in [int, float] :
+        # pw     = int(abs(scope) * count * .1 ** int(np.log10(count)))
+        # scope  = pw if scope < 0 else scope
+        res = samples(count, size = scope)
+    else :
+        res = samples(scope, size = count) if count > 0 else res
+
+    return len(res), res
+
+###
 def files_in_zip(compressed_files : str, directory : str | None = None) -> Clause :
     with ZipFile(compressed_files) as myzip :
         if ((directory == None) | (directory == '')) :

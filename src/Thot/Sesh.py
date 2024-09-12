@@ -119,45 +119,19 @@ def plot_signal(data : Board | Vector, parts : list[tuple[int, int]], event0 : I
     plt.show();
 
 ### Visualiser le signal original et les bandes de fréquences filtrées
-def plot_wavelets_z(df : Board, coeffs : dict[str, tuple[float, float]], Channels : Clause,
-                    scope = Index, period : int = 0, lag : int | None = 0, titled : str = '') -> None :
-    n       = len(Channels)
-    _, ax   = plt.subplots(nrows = 2, ncols = n, figsize = (n * 6.5, 3.6), sharex = 0)
-
-    # print(scope)
-    # print(event_epochs(scope, period, lag))
-
-    scope   = list(event_epochs(scope, period, lag))
-    x_ticks = df.loc[scope, Channels[0]].index
-    titled += " - " if titled != '' else ''
-
-    for i, col in enumerate(Channels) :
-        view    = ax[0, i]
-        data    = normalized(df.loc[scope, col])
-        signals = {band : bandpass_filter(data, b, a) for band, (b, a) in coeffs.items()}
-
-        view.plot(data, label = 'Raw signal')
-        view.plot(pd.Series(signals[[*signals][0]], x_ticks), '--', c = 'maroon', label = 'Porteuse') # darkviolet indigo firebrick tomato darkturquoise
-        view.set_title(titled + col)
-        view.legend(loc = 'upper right')
-        
-        view = ax[1, i]
-
-        for (band, signal) in reversed(signals.items()) :
-            view.plot(pd.Series(signal, x_ticks), label = f'{band}', c = np.random.rand(1, 3)[0])
-
-        view.legend(loc = 'upper right')
-
-    plt.tight_layout()
-    plt.show();
-
-### Visualiser le signal original et les bandes de fréquences filtrées
 def plot_wavelets(data : Board, coeffs : dict[str, tuple[float, float]], Channels : Clause,
-                  scope : Index | int = -1, headers : Clause | None = None) -> None :
-    count  = len(data.index)
-    pw     = int(abs(scope) * count * .1 ** int(np.log10(count)))
-    scope  = pw if scope < 0 else scope
-    sample = np.random.default_rng().integers(count, size = scope)
+                  scope : int | Index = -1, size : int | None = None, headers : Clause | None = None) -> None :
+    count = len(data.index)
+
+    scope, sample = random_filter(scope, count)
+    
+    # if type(scope) in [int, float] :
+    #     pw     = int(abs(scope) * count * .1 ** int(np.log10(count)))
+    #     scope  = pw if scope < 0 else scope
+    #     sample = np.random.choice(count, size = scope) # .default_rng().integers()
+    # else :
+    #     sample = scope
+    #     scope  = len(scope)
     
     n_tick = len(data.iloc[0, 0])
     n_titl = count // len(headers)
@@ -165,21 +139,19 @@ def plot_wavelets(data : Board, coeffs : dict[str, tuple[float, float]], Channel
     _, ax  = plt.subplots(nrows = 2 * scope, ncols = n,
                           figsize = (6.5 * n, 3.6 * scope), sharex = 0)
 
-    sample.sort()
-
     for i, k in enumerate(sample) :
         n       = k // n_titl
         x_ticks = range(n, n + n_tick)
         lexem   = f"{headers[n]} - " if headers != None else ''
         
-        for j, col in enumerate(Channels) :
+        for j, c in enumerate(Channels) :
             view    = ax[2 * i + 0, j]
-            bw      = data[col][k]      # normalized(data[col][k])
+            bw      = data[c][k]      # normalized(data[col][k])
             signals = {band : bandpass_filter(bw, b, a) for band, (b, a) in coeffs.items()}
             
             view.plot(pd.Series(bw, x_ticks), label = 'Raw signal')
             view.plot(pd.Series(signals[[*signals][0]], x_ticks), '--', c = 'maroon', label = 'Porteuse') # darkviolet indigo firebrick tomato darkturquoise
-            view.set_title(f"{lexem}{k} . {col}")
+            view.set_title(f"{lexem}{k} . {c}")
             view.legend(loc = 'upper right')
         
             view = ax[2 * i + 1, j]
