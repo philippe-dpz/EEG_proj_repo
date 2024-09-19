@@ -147,18 +147,18 @@ def plot_wavelets(data : Board, coeffs : dict[str, tuple[float, float]], Channel
         for j, c in enumerate(Channels) :
             view    = ax[2 * i + 0, j]
             bw      = data[c][k]      # normalized(data[col][k])
-            signals = {band : bandpass_filter(bw, b, a) for band, (b, a) in coeffs.items()}
+            signals = {band: bandpass_filter(bw, b, a) for band, (b, a) in coeffs.items()}
             
             view.plot(pd.Series(bw, x_ticks), label = 'Raw signal')
             view.plot(pd.Series(signals[[*signals][0]], x_ticks), '--', c = 'maroon', label = 'Porteuse') # darkviolet indigo firebrick tomato darkturquoise
             view.set_title(f"{lexem}{k} . {c}")
             view.legend(loc = 'upper right')
-        
+
             view = ax[2 * i + 1, j]
 
             for (band, signal) in reversed(signals.items()) :
                 view.plot(pd.Series(signal, x_ticks), label = f'{band}', c = np.random.rand(1, 3)[0])
-
+            
             view.legend(loc = 'upper right')
 
     plt.tight_layout()

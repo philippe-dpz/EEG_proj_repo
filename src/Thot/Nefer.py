@@ -216,5 +216,6 @@ def mne_from_raw(data : Board | Vector, channels : Clause | str, sf : int) -> mn
 def normalized(data : Board | Vector) -> Board | Vector :
     return stats.zscore(data)
 
+###
 def filename(data : Clause, start : str = '/', end : str = '.') -> Clause :
     return [X[max(X.rfind(start), 0) : min(max(X.rfind(end), 0), len(X))] for X in data]
