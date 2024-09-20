@@ -26,7 +26,7 @@ def temps_execution(function : any) -> any:
     
     return timer
 
-###
+### 
 def samples(n : int, size : float = 1e-1) -> Index :
     res = np.random.choice(n, size = n * 10 if size < 1 else size)
 
@@ -45,7 +45,7 @@ def random_filter(scope : int | Index, count : int | None = None) -> [int, Index
 
     return len(res), res
 
-###
+### 
 def files_in_zip(compressed_files : str, directory : str | None = None) -> Clause :
     with ZipFile(compressed_files) as myzip :
         if ((directory == None) | (directory == '')) :
@@ -80,11 +80,6 @@ def pickle_in_zip(fichier_zip : str, fichier_specifique : str) -> Board :
     with ZipFile(fichier_zip).open(fichier_specifique) as f :
         return pd.read_pickle(f)
 
-### Coefficients du filtre Butterworth pour filtrage passe-bande
-def butter_bandpass(lowcut : float, highcut : float, fs : float,
-                    order : int | None = 4) -> tuple[Vector, Vector] :
-    return signal.butter(order, 2 * np.array([lowcut, highcut]) / fs, btype = 'band')
-
 ### 
 def hand_out(data : Board | Vector, events : Index, width : int, channels : Clause,
              hand : int | None = 0, expend : int | None = 0) -> Board :
@@ -113,9 +108,18 @@ def share_out(data : Board | Vector, event0 : Index, event1 : Index, size : int,
 
     return res
 
+### Coefficients du filtre Butterworth pour filtrage passe-bande
+def butter_bandpass(lowcut : float, highcut : float, fs : float,
+                    order : int | None = 4) -> tuple[Vector, Vector] :
+    return signal.butter(order, 2 * np.array([lowcut, highcut]) / fs, btype = 'band')
+
 ### Filtre passe-bande (avec les coefficients b et a issus de la décomposition de Butterworth)
 def bandpass_filter(data : Board | Vector, b : Vector, a : Vector) -> Vector :
     return signal.filtfilt(b, a, data)
+
+### Découpage harmonic du signal
+def harmonic(data : Vector, bands : dict) -> dict[str: Vector] :
+    return {band: bandpass_filter(data, b, a) for band, (b, a) in bands.items()}
 
 ### Filtre Notch 
 def notch_filter(data : Board | Vector, freq : float, fs : float, window : int, order : int,
@@ -174,25 +178,25 @@ def find_peaks_pos(data : Board | Vector, scope : int) -> tuple[Index, Index] :
      
     return pos, neg
 
-###
+### 
 def compare(A : Board | Vector, B : Board | Vector) -> Board :
     return pd.DataFrame({'A' : list(A), 'B' : list(B)})
 
-###
+### 
 def full_event(data : Board | Vector, tracks : list[Index], flatten : bool = True) -> Vector :
     return np.array(data)[tracks].flatten() if flatten else np.array(data)[tracks]
 
-###
+### 
 def moving_average(data : Board | Vector, w : int | None = 3) -> Vector :
     res = data.cumsum() / w
 
     return np.append(np.zeros(w), res[w: ] - res[: -w])
 
-###
+### 
 def event_epochs(cuts : Vector | list, period : int, lag : int | None = 0) -> np.ndarray :
     return np.array([range(x - lag, x - lag + period) for x in cuts])
 
-###
+### 
 def event_slicer(event_type : Board | Vector, cuts : Vector | list, period : int,
                  lag : int | None = 0) -> tuple[Vector, Vector] :
     period -= lag
@@ -200,22 +204,22 @@ def event_slicer(event_type : Board | Vector, cuts : Vector | list, period : int
     
     return tout[np.where(event_type == 0)], tout[np.where(event_type == 1)]
 
-###
+### 
 def simple_thresholding(data : Board | Vector) -> tuple[float, Vector] :
     peak = np.max(np.abs(data))
 
     return peak, data / peak
 
-###
+### 
 def mne_from_raw(data : Board | Vector, channels : Clause | str, sf : int) -> mne.io.RawArray :
     info = mne.create_info(ch_names = channels, sfreq = sf, ch_types = 'eeg')
     
     return mne.io.RawArray(data.T * 1e-6, info);
 
-###
+### 
 def normalized(data : Board | Vector) -> Board | Vector :
     return stats.zscore(data)
 
-###
+### 
 def filename(data : Clause, start : str = '/', end : str = '.') -> Clause :
     return [X[max(X.rfind(start), 0) : min(max(X.rfind(end), 0), len(X))] for X in data]
