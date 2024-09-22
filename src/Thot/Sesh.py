@@ -69,11 +69,11 @@ def plot_psd(datas : list[Board], event_type : list[Board], rate : int,
     plt.show();
 
 ###
-def subplot_signal(fig : plt.Axes, event0 : Index, event1 : Index, span : int,
+def subplot_signal(fig : plt.Axes, events : list[Index], span : int, # , event1 : Index
                    origin : float, width : int, height : int) -> None :
     mask  = .75
 
-    for i, ev in enumerate([event0, event1]) :
+    for i, ev in enumerate(events) :  # [, event1]
         for x in ev :
             fig.add_patch(Rectangle((x[0], -origin), width = width, height = height,
                                     color = ['teal', 'salmon'][i], alpha = mask))   # '#1B4E88' '#793F22'

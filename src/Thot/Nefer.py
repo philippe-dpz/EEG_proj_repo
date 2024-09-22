@@ -5,6 +5,8 @@ import numpy as np
 
 import time, mne
 
+from typing_extensions import deprecated # type: ignore
+
 from zipfile import ZipFile
 from scipy import signal, stats
 
@@ -80,37 +82,8 @@ def pickle_in_zip(fichier_zip : str, fichier_specifique : str) -> Board :
     with ZipFile(fichier_zip).open(fichier_specifique) as f :
         return pd.read_pickle(f)
 
-### 
-def hand_out(data : Board | Vector, events : Index, width : int, channels : Clause,
-             hand : int | None = 0, expend : int | None = 0) -> Board :
-    extra  = pd.DataFrame()
-    width += 2 * expend
-    signal = [f'S_{i}' for i in range(width)]
-    
-    for i in events :
-        ixp  = i - expend
-        span = range(ixp, ixp + width)
-        part = [{**{'data_split' : ixp},
-                 **dict(zip(signal, data.loc[span, c])),
-                 **{'hand' : hand, f'{c}_dum' : 1}} for c in channels]
-        extra = pd.concat([extra, pd.DataFrame(part)])
-
-    return extra
-
-### Pour récupérer les évènement relatifs à la survenue d'une action associcée aux mains
-def share_out(data : Board | Vector, event0 : Index, event1 : Index, size : int,
-              canals : Clause, expend : int | None = 0) -> Board :
-    hand0 = hand_out(data, event0, size, canals, 0, expend)
-    hand1 = hand_out(data, event1, size, canals, 1, expend)
-    res   = pd.concat([hand0, hand1])
-
-    res.reset_index(drop = True, inplace = True)
-
-    return res
-
 ### Coefficients du filtre Butterworth pour filtrage passe-bande
-def butter_bandpass(lowcut : float, highcut : float, fs : float,
-                    order : int | None = 4) -> tuple[Vector, Vector] :
+def butter_bandpass(lowcut : float, highcut : float, fs : float, order : int | None = 4) -> tuple[Vector, Vector] :
     return signal.butter(order, 2 * np.array([lowcut, highcut]) / fs, btype = 'band')
 
 ### Filtre passe-bande (avec les coefficients b et a issus de la décomposition de Butterworth)
@@ -223,3 +196,75 @@ def normalized(data : Board | Vector) -> Board | Vector :
 ### 
 def filename(data : Clause, start : str = '/', end : str = '.') -> Clause :
     return [X[max(X.rfind(start), 0) : min(max(X.rfind(end), 0), len(X))] for X in data]
+
+### • Deprecated
+
+@deprecated("Plus utilisé dans le cadre du projet EEG")
+def hand_out(data : Board | Vector, events : Index, width : int, channels : Clause,
+             hand : int | None = 0, expend : int | None = 0) -> Board :
+    xtra   = pd.DataFrame()
+    width  += 2 * expend
+    signal = [f'S_{i}' for i in range(width)]
+
+    for i in events :
+        iexp = i - expend
+        span = range(iexp, iexp + width)
+        part = [{**{'data_split': iexp},
+                 **dict(zip(signal, data.loc[span, c])),
+                 **{'hand': hand, f'{c}_dum': 1}} for c in channels]
+        xtra = pd.concat([xtra, pd.DataFrame(part)])
+
+    return xtra
+
+@deprecated("Plus utilisé dans le cadre du projet EEG")
+### Pour récupérer les évènement relatifs à la survenue d'une action associcée aux mains
+def share_out(data : Board | Vector, events : list[Index], size : int,
+              canals : Clause, expend : int | None = 0) -> Board :
+    hand0 = hand_out(data, events[0], size, canals, 0, expend)
+    hand1 = hand_out(data, events[1], size, canals, 1, expend)
+    res   = pd.concat([hand0, hand1])
+
+    res.reset_index(drop = True, inplace = True)
+
+    return res
+
+@deprecated("Plus utilisé dans le cadre du projet EEG")
+def fancy_df(df : pd.DataFrame, events : list, hands : dict, size : int,
+             expend : int = 0) -> tuple[pd.DataFrame, list] : # deprecated
+    df_cpy = pd.DataFrame({'C3_4'  : df[['C3', 'C4']].sum(axis = 1), # Somme des signaux 'C3' et 'C4'.
+                            # 'EventStart' : df['EventStart'],       # Survenue d'un évènement lié à une des mains.
+                           'Hand'  : 0,                              # Activité liée à l'une des mains.
+                           'Left'  : 0,                              # Activité liée à la main gauche.
+                           'Right' : 0})                             # Activité liée à la main droite.
+    evts  = list(zip(np.where(df['EventStart'] == 1)[0], events))
+    size += 2 * expend
+    # df_cpy['zCore'] = stats.zscore(df['C3_4'])
+
+    for i, j in evts :
+        i                        -= expend
+        fin                       = range(i, i + size)
+        df_cpy.loc[fin, 'Hand']   = np.ones(size)
+        df_cpy.loc[fin, hands[j]] = np.ones(size)
+
+    return df_cpy, evts # [i[0] for i in evts]
+
+@deprecated("Plus utilisé dans le cadre du projet EEG")
+def left_right_old(df : pd.DataFrame, events : list, size : int, canals, hand : int = 0,
+                      expend : int = 0) -> pd.DataFrame :
+    lp    = range(len(canals))
+    res   = [[] for _ in lp]
+    size += expend * 2
+
+    for i in events :
+        i   -= expend
+        fin = range(i, i + size)
+
+        for k, c in enumerate(canals) :
+            res[k] = np.append(res[k], df.loc[fin, c].values)
+
+    return pd.DataFrame({'signal_epoched' : res, 'canal' : canals, 'hand' : hand, 'data_split' : [events for _ in lp]})
+
+# d = 511
+
+# print((d >> 5) << 5)
+# print((d // 32) * 32)
