@@ -153,7 +153,8 @@ def find_peaks_pos(data : Board | Vector, scope : int) -> tuple[Index, Index] :
 
 ### 
 def compare(A : Board | Vector, B : Board | Vector) -> Board :
-    return pd.DataFrame({'A' : list(A), 'B' : list(B)})
+    return pd.DataFrame(list(A), list(B))
+    # return pd.DataFrame({'A' : list(A), 'B' : list(B)})
 
 ### 
 def full_event(data : Board | Vector, tracks : list[Index], flatten : bool = True) -> Vector :
@@ -166,7 +167,7 @@ def moving_average(data : Board | Vector, w : int | None = 3) -> Vector :
     return np.append(np.zeros(w), res[w: ] - res[: -w])
 
 ### 
-def event_epochs(cuts : Vector | list, period : int, lag : int | None = 0) -> np.ndarray :
+def event_epochs(cuts : Vector | list, period : int, lag : int | None = 0) -> Vector :
     return np.array([range(x - lag, x - lag + period) for x in cuts])
 
 ### 
