@@ -3,17 +3,18 @@
 import pandas as pd
 import numpy as np
 
-import time, mne
+import time, mne, gc
 
 from typing_extensions import deprecated # type: ignore
 
 from zipfile import ZipFile
 from scipy import signal, stats
 
-type Clause = list[str]
-type Index  = list[int] | range
-type Vector = list[float] | np.ndarray | Index
-type Board  = pd.Series | pd.DataFrame
+type LComplex = list[complex]
+type Clause   = list[str]
+type Index    = list[int] | range
+type Vector   = list[float] | np.ndarray | Index
+type Board    = pd.Series | pd.DataFrame
 
 ### Décorateur : Temps d'exécution d'une fonction
 def temps_execution(function : any) -> any:
