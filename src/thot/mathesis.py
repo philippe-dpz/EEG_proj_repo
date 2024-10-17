@@ -4,7 +4,7 @@ import math
 
 # https://github.com/DynamicsAndNeuralSystems/catch22/tree/main/C  
 
-def pow2(n : int) -> int :
+def ceil_pow2(n : int) -> int :
     n -= 1
 
     n |= n >> 1
@@ -20,6 +20,9 @@ def adjacent(y : Vector) -> Vector :
 
 def deviation(y : Vector) -> Vector :
     return np.array(y) - np.mean(y)
+
+def padding(y : Vector, size : int) -> LComplex :
+    return np.append(np.complex128(y), np.zeros(size - len(y), dtype = complex))
 
 def stddev(y : Vector) -> float :
     return np.std(y)
@@ -57,7 +60,7 @@ def histcounts_preallocated(y : Vector, nBins : int) -> tuple[Vector, Vector] :
 
         binCounts[int(binInd)] += 1
 
-    binEdges = np.array(range(nBins + 1)) * binStep + minVal
+    binEdges = np.arange(nBins + 1) * binStep + minVal
     
     return binCounts, binEdges
 
@@ -81,18 +84,24 @@ def corrs(x : Vector, y : Vector, size : int) -> float :
     dev_X = deviation(x[: size])
     dev_Y = deviation(y[: size])
 
-    return sum(dev_X * dev_Y) / math.sqrt(sum(dev_X ** 2) * sum(dev_Y ** 2))
+    den = math.sqrt(np.dot(dev_X, dev_X) * np.dot(dev_Y, dev_Y))
+
+    return np.dot(dev_X, dev_Y) / den
 
 def autocorr_lag(x : Vector, lag : int) -> float :
     return corrs(x, x[lag :], len(x) - lag)
 
 def fc_local_simple_mean(y : Vector, size : int) -> Vector :
-    yest = [sum(y[i : i + size]) / size for i in range(len(y) - size)]
+    yest = [sum(y[i : i + size]) for i in range(len(y) - size)]
 
-    return [y[i + size] - x for i, x in enumerate(yest)]
+    return y[size :] - np.array(yest) / size
+
+    # return [y[i + size] - x for i, x in enumerate(yest)]
 
 def twiddles(size : int) -> LComplex :
-    return [np.exp(complex(0, x)) for x in -math.pi * np.array(range(size)) / size]
+    k = -math.pi / size
+
+    return np.exp([complex(0, x) for x in np.arange(size) * k])
 
 def _fft(a : LComplex, out : LComplex, tw : LComplex, step : int) -> None :
     size : int = len(a)
@@ -112,16 +121,15 @@ def _fft(a : LComplex, out : LComplex, tw : LComplex, step : int) -> None :
 def fft(y : LComplex, tw : LComplex) -> None :
     _fft(y, y.copy(), tw, 1)
 
-def co_autocorrs(y : LComplex) -> Vector :
+def co_autocorrs(y : Vector) -> Vector :
     nb   : int = len(y)
-    nFFT : int = pow2(nb) << 1
+    nFFT : int = ceil_pow2(nb) << 1
     
     tw = twiddles(nFFT)
-    F  = list(np.complex128(deviation(y))) \
-       + [complex(0) for _ in range(nFFT - nb)]
+    F  = padding(deviation(y), nFFT)
 
     fft(F, tw)
-    fft([f * f.conjugate() for f in F], tw)
+    fft(F * np.conjugate(F), tw)
 
     divisor = F[0]
     divisor /= divisor ** 2
@@ -130,10 +138,15 @@ def co_autocorrs(y : LComplex) -> Vector :
 
 def co_firstzero(y : Vector, max_tau : int) -> int :
     corrs = co_autocorrs(y)
+    signs = np.sign(corrs)
+
+    for i in range(min(len(signs) - 1, max_tau)) :
+        if (signs[i] != signs[i + 1]) : return i + 1
 
     zeroCrossInd : int = 0
 
-    while ((corrs[zeroCrossInd] > 0) & (zeroCrossInd < max_tau)) : zeroCrossInd += 1
+    while ((corrs[zeroCrossInd] > 0) & (zeroCrossInd < max_tau)) :
+        zeroCrossInd += 1
 
     return zeroCrossInd
 
@@ -306,9 +319,9 @@ def quantile(y : Vector, quant : float) -> float :
 def sb_coarsegrain(y : Vector, how : str, num_groups : int) -> Vector :
     # if (how == "quantile") :
     #     raise ("ERROR in sb_coarsegrain: unknown coarse-graining method\n")
-    
-    ls = np.linspace(0, 1, num_groups + 1)
-    th = [quantile(y, ls[i]) for i in range(num_groups + 1)]
+    n1 : int = num_groups + 1
+    ls = np.linspace(0, 1, n1)
+    th = [quantile(y, ls[i]) for i in range(n1)]
     
     th[0] -= 1
 
@@ -347,29 +360,27 @@ def linreg(x : Vector, y : Vector, n : int) -> tuple[int, float, float] : #, dou
     return 0, m, b
 
 def welch(y : Vector, NFFT : int, Fs : float, window : Vector) -> tuple[int, Vector, Vector] : #, double ** Pxx, double ** f
-    width : int = len(window)
     size  : int = len(y)
+    width : int = len(window)
     # number of windows, should be 1
     ww    : int = width >> 1
     k     : int = int(size / ww) - 1
 
     dt = 1.0 / Fs
-    df = 1.0 / (pow2(width) * dt)
-    mn = np.mean(y)
+    df = 1.0 / (ceil_pow2(width) * dt)
     
     # fft variables
     P  = np.zeros(NFFT, dtype = complex)
     tw = twiddles(NFFT)
 
     for i in range(k) :
-        # apply window
-        xw = [window[j] * y[j + int(i * ww)] for j in range(width)]
-        # initialise F 
-        F  = [complex(x - mn) for x in xw] + [complex(0) for _ in range(width, NFFT)]
-        
+        gap = i * ww
+        # apply window / initialise F 
+        F  = padding(deviation(window * y[gap : width + gap]), NFFT)
+    
         fft(F, tw)
 
-        for l in range(NFFT) : P[l] += F[l] ** 2
+        P += F ** 2
     
     Nout : int = (NFFT >> 1) + 1
 
@@ -378,4 +389,4 @@ def welch(y : Vector, NFFT : int, Fs : float, window : Vector) -> tuple[int, Vec
 
     Pxx[1 : Nout - 1] *= 2
     
-    return Nout, Pxx[: Nout], np.array(range(Nout)) * df
+    return Nout, Pxx[ : Nout], np.arange(Nout) * df
