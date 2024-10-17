@@ -31,7 +31,7 @@ def cov_mean(x : Vector, y : Vector) -> float :
     return np.dot(x, y) / len(x)
 
 def boolInt(b : bool) -> int :
-    return 2 - ~int(b)
+    return ~int(b) + 2
 
 def f_entropy(a : Vector) -> float :
     return -1 * sum([x * math.log(x) for x in a if (x > 0)])
@@ -65,8 +65,8 @@ def histcounts_preallocated(y : Vector, nBins : int) -> tuple[Vector, Vector] :
     return binCounts, binEdges
 
 def histBinAssign(y : Vector, binEdges : Vector) -> Vector :
-    size : int = len(y)
-    nEdges = range(len(binEdges))
+    size   : int = len(y)
+    nEdges : int = range(len(binEdges))
     # variable to store counted occurances in
     binIdentity = np.zeros(size)
 
@@ -150,7 +150,11 @@ def co_firstzero(y : Vector, max_tau : int) -> int :
 
     return zeroCrossInd
 
-@deprecated("Problème dans l'implémentation")
+def lsqsolve_sub(A, y : Vector) -> Vector :
+    AT  = A.T
+
+    return np.linalg.solve(np.matmul(AT, A), np.matmul(AT, y))
+
 def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
     size      : int = len(y)
     piecesExt : int = 4
@@ -175,9 +179,8 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
     H  = [hExt[I2[i % nSpline][i // nSpline]] for i in range(nCoeff)]
     # recursive generation of B-splines
     Q  = np.zeros((nSpline, piecesExt))
-    # initialise polynomial coefficients + 1
-    Kf = np.zeros((nCoeff, nSpline))
-    # Q2 = np.zeros((nCoeff, nSpline)) 
+    # initialise polynomial coefficients
+    Kf = np.zeros((nCoeff + 1, nSpline))
 
     for i in range(0, nCoeff, nSpline) : Kf[i][0] = 1
 
@@ -196,7 +199,7 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
         for l in range(nCoeff) :
             md = l % nSpline 
             
-            Kf[l][k] = 0 if (md == 0) else Q[md - 1][l // nSpline]  # questionable
+            Kf[l][k] = 0 if (md == 0) else Q[l % nSpline - 1][l // nSpline]  # questionable
         
         # normalise antiderivatives by max value
         fmax = [Q[nSpline - 1][i] for _ in range(nSpline) for i in range(piecesExt)]
@@ -225,10 +228,8 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
     
     for i in range(1, nSpline) :
         for j in range(pieces) : jj[i][j] += jj[i - 1][j]
-    
-    print([jj[i % nSpline][i // nSpline] - 2 for i in range(nSpline * pieces)])
 
-    coefs_out = [[Kf[jj[i % nSpline][i // nSpline] - 2][j] for j in range(nSpline)]
+    coefs_out = [[Kf[jj[i % nSpline][i // nSpline] - 1][j] for j in range(nSpline)]
                  for i in range(nSpline * pieces)]
     
     # -- create first B-splines to feed into optimization
@@ -236,15 +237,15 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
     score : int = size * nSpline
 
     # x-values for B-splines
-    xsB    = np.zeros(score)
-    indexB = np.zeros(score)
+    xsB    = np.zeros(score, dtype = int)
+    indexB = np.zeros(score, dtype = int)
     
-    breakInd : int = 1
+    stop : int = 1
 
     for i in range(size) :
-        if((i >= breaks[breakInd]) & (breakInd < nBreaks - 1)) : breakInd += 1
+        if((i >= breaks[stop]) & (stop < nBreaks - 1)) : stop += 1
         
-        m = breakInd - 1
+        m = stop - 1
 
         for j in range(nSpline) :
             p = i * nSpline + j
@@ -260,13 +261,17 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
     
     A = np.zeros((nSpline + 1) * size)
 
-    breakInd = 0
+    stop = 0
 
     for i in range(score) :
-        if (i / nSpline >= breaks[1]) : breakInd = 1
+        if (i / nSpline >= breaks[1]) : stop = 1
 
-        A[(i % nSpline) + breakInd + (i // nSpline) * (nSpline + 1)] = vB[i]
+        A[stop + (i % nSpline) + (i // nSpline) * (nSpline + 1)] = vB[i]
     
+    A[-1] = 1
+    
+    x = lsqsolve_sub(np.reshape(A, (size, 5)), y)
+
     # coeffs of B-splines to combine by optimised weighting in x
     C = np.zeros((pieces + nSpline - 1, nSpline * pieces))
 
@@ -277,8 +282,6 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
     
         C[(i % nSpline) + (j % 2)][j] = coefs_out[i % n2][i // n2]
     
-    x = np.linalg.solve(A, y) # lsqsolve_sub(nSpline + 1, A, y)
-    
     # final coefficients
     coefsSpline = np.zeros((pieces, nSpline))
     
@@ -287,13 +290,11 @@ def splinefit(y : Vector, nBreaks : int = 3, deg : int = 3) -> Vector :
         for i in range(nSpline + 1) :
             coefsSpline[j % pieces][j // pieces] += C[i][j] * x[i]
     
-    # compute piecewise polynomial
-    
-    yOut = [coefsSpline[boolInt(i < breaks[1])][0] for i in range(size)]
+    yOut = [coefsSpline[~int(i < breaks[1]) + 2][0] for i in range(size)]
 
     for i in range(1, nSpline) :
         for j in range(size) :
-            p = boolInt(j < breaks[1])
+            p = ~int(j < breaks[1]) + 2
             yOut[j] *= (j - breaks[1] * p) + coefsSpline[p][i]
     
     return yOut
