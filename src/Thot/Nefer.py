@@ -29,6 +29,16 @@ def temps_execution(function : any) -> any:
     
     return timer
 
+###
+def single_draw(start : int = 1, end : int = 9, size : int = 2) -> Vector :
+    draw = np.random.randint(start, end, size)
+    
+    draw.sort()
+    
+    diff = sum(draw[0 : -1 :] == draw[1 ::]) < 1
+
+    return draw if diff else single_draw(start, end, size)
+
 ### 
 def samples(n : int, size : float = 1e-1) -> Index :
     res = np.random.choice(n, size = n * 10 if size < 1 else size)
@@ -64,17 +74,21 @@ def csv_in_zip(compressed_files : str, directory : str | None = None,
     res = []
     dir = '' if ((directory == None) | (directory == '')) else f"{directory}/"
 
-    with ZipFile(compressed_files) as myzip :
-        filters = myzip.infolist() if dir == '' else \
-                  [fic for fic in myzip.infolist() if dir in fic.filename]
+    with ZipFile(compressed_files) as zip_file :
+        filters = zip_file.infolist() if dir == '' else \
+                  [fic for fic in zip_file.infolist() if dir in fic.filename]
 
         if files != None :
             records = [dir + X for X in files]
             filters = [X for X in filters if (X.filename in records)]
 
         for fic in filters :
-            with myzip.open(fic.filename) as f :
-                res.append(pd.read_csv(f, encoding_errors = 'ignore'))
+            with zip_file.open(fic.filename) as f :
+                df = pd.read_csv(f, encoding_errors = 'ignore')
+
+                res.append(df)
+
+    gc.collect()
 
     return res
 
@@ -138,12 +152,11 @@ def zero_aggregator(data : Board | Vector) -> Vector :
 def zero_removal(data : Board | Vector, step : int | None = 100) -> Vector :
     parts = np.where(abs(data) >= step)[0]
 
-    if len(parts) == 0 : return [range(0, len(data))]
+    if len(parts) == 0 : return [(0, len(data))]
     
     runs = zero_aggregator(parts)
-    splt = zip(np.append(0, runs[1 :: 2] + 1), np.append(runs[0 :: 2], len(data)) - 1)
 
-    return [range(a, b) for a, b in splt]
+    return list(zip(np.append(0, runs[1 :: 2] + 1), np.append(runs[0 :: 2], len(data)) - 1))
 
 ### Détection des pics positif et négatif dans un signal
 def find_peaks_pos(data : Board | Vector, scope : int) -> tuple[Index, Index] :
@@ -154,34 +167,41 @@ def find_peaks_pos(data : Board | Vector, scope : int) -> tuple[Index, Index] :
 
 ### 
 def compare(A : Board | Vector, B : Board | Vector) -> Board :
-    return pd.DataFrame(list(A), list(B))
     # return pd.DataFrame({'A' : list(A), 'B' : list(B)})
+    return pd.DataFrame(list(A), list(B))
 
-### 
+###
 def full_event(data : Board | Vector, tracks : list[Index], flatten : bool = True) -> Vector :
     return np.array(data)[tracks].flatten() if flatten else np.array(data)[tracks]
 
-### 
-def moving_average(data : Board | Vector, w : int | None = 3) -> Vector :
-    res = data.cumsum() / w
-
-    return np.append(np.zeros(w), res[w: ] - res[: -w])
-
-### 
+###
 def event_epochs(cuts : Vector | list, period : int, lag : int | None = 0) -> Vector :
     return np.array([range(x - lag, x - lag + period) for x in cuts])
 
 ### 
+def normalized(data : Board | Vector) -> Board | Vector :
+    return stats.zscore(data)
+
+### 
+def filename(data : Clause, start : str = '/', end : str = '.') -> Clause :
+    return [x[max(x.rfind(start), 0) : min(max(x.rfind(end), 0), len(x))] for x in data]
+
+###
+def moving_average(data : Board | Vector, w : int | None = 3) -> Vector :
+    res = data.cumsum() / w
+
+    return np.append(np.zeros(w), res[w :] - res[: -w])
+
+###
 def event_slicer(event_type : Board | Vector, cuts : Vector | list, period : int,
                  lag : int | None = 0) -> tuple[Vector, Vector] :
-    period -= lag
-    tout = event_epochs(cuts, period, lag)
+    tout = event_epochs(cuts, period - lag, lag)
     
     return tout[np.where(event_type == 0)], tout[np.where(event_type == 1)]
 
 ### 
 def simple_thresholding(data : Board | Vector) -> tuple[float, Vector] :
-    peak = np.max(np.abs(data))
+    peak = np.max(abs(data))
 
     return peak, data / peak
 
@@ -190,14 +210,6 @@ def mne_from_raw(data : Board | Vector, channels : Clause | str, sf : int) -> mn
     info = mne.create_info(ch_names = channels, sfreq = sf, ch_types = 'eeg')
     
     return mne.io.RawArray(data.T * 1e-6, info);
-
-### 
-def normalized(data : Board | Vector) -> Board | Vector :
-    return stats.zscore(data)
-
-### 
-def filename(data : Clause, start : str = '/', end : str = '.') -> Clause :
-    return [X[max(X.rfind(start), 0) : min(max(X.rfind(end), 0), len(X))] for X in data]
 
 ### • Deprecated
 

@@ -63,7 +63,7 @@ def plot_psd(datas : list[Board], event_type : list[Board], rate : int,
 
             view.legend(loc = 'upper right')
             view.set_xlabel('')
-            view.set_ylabel('');
+            view.set_ylabel('')
 
     plt.tight_layout()  # pad = 3.5
     plt.show();
