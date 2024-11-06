@@ -129,7 +129,7 @@ def titre(txt : str, size : int) -> str :
     return f"{'-' * avt} {txt.upper()} {'-' * (size - (avt + n + 1))}"
 
 ### %%time
-def train_test_fit(entrants : list[Board], targets : list[Board], files : Clause,
+def train_test_init(entrants : list[Board], targets : list[Board], files : Clause,
                methode : int = -1, test_size : float = .2, random_state : int = 42) \
         -> tuple[Clause, Clause, Clause, Clause] :
     n_files = len(files)
@@ -184,17 +184,15 @@ def train_test_fit(entrants : list[Board], targets : list[Board], files : Clause
             # print(f"{len(train_pos) / n_files :.2%}")
 
     # -------------------- Train --------------------
-    train_files = files[train_pos]
     train_csv   = [entrants[i] for i in train_pos]
     train_label = [targets[i] for i in train_pos]
     # --------------------- Test --------------------
-    test_files  = files[test_pos]
     test_csv    = [entrants[i] for i in test_pos]
     test_label  = [targets[i] for i in test_pos]
 
-    print("Fichiers d'entrainements :\n ", *train_files)
+    print("Fichiers d'entrainements :\n ", *files[train_pos])
     print()
-    print("Fichiers tests :\n ", *test_files)
+    print("Fichiers tests :\n ", *files[test_pos])
     print()
 
     return train_csv, train_label, test_csv, test_label
