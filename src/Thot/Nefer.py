@@ -3,12 +3,15 @@
 import pandas as pd
 import numpy as np
 
-import time, mne, gc
+import math, time, mne, gc
 
 from typing_extensions import deprecated # type: ignore
 
 from zipfile import ZipFile
 from scipy import signal, stats
+
+from sklearn.model_selection import train_test_split
+from torch import Tensor
 
 type LComplex = list[complex]
 type Clause   = list[str]
@@ -98,7 +101,8 @@ def pickle_in_zip(fichier_zip : str, fichier_specifique : str) -> Board :
         return pd.read_pickle(f)
 
 ### Coefficients du filtre Butterworth pour filtrage passe-bande
-def butter_bandpass(lowcut : float, highcut : float, fs : float, order : int | None = 4) -> tuple[Vector, Vector] :
+def butter_bandpass(lowcut : float, highcut : float, fs : float, order : int | None = 4) \
+        -> tuple[Vector, Vector] :
     return signal.butter(order, 2 * np.array([lowcut, highcut]) / fs, btype = 'band')
 
 ### Filtre passe-bande (avec les coefficients b et a issus de la décomposition de Butterworth)
@@ -116,6 +120,165 @@ def notch_filter(data : Board | Vector, freq : float, fs : float, window : int, 
                             rp = ripple, btype = 'bandstop', analog = False, ftype = filter_type)
     
     return signal.lfilter(b, a, data)
+
+###
+def titre(txt : str, size : int) -> str :
+    n   = len(txt)
+    avt = ((size - n) >> 1) - 1
+
+    return f"{'-' * avt} {txt.upper()} {'-' * (size - (avt + n + 1))}"
+
+### %%time
+def train_test_fit(entrants : list[Board], targets : list[Board], files : Clause,
+               methode : int = -1, test_size : float = .2, random_state : int = 42) \
+        -> tuple[Clause, Clause, Clause, Clause] :
+    n_files = len(files)
+    size    = range(n_files)
+    files   = np.array(files)
+    unic    = len(np.unique([x[2] for x in files]))
+    step    = n_files // unic
+
+    match methode :
+        case 1 | 2 :
+            """
+            Le cas 2 est utilisé pour test.
+            Les résultats du 'run' 3 ne sont pas utilisés.
+            """
+            files     = np.array([f for f in files if f not in files[:: -3]])
+            size      = range(len(files))
+            n_test    = np.array([1, 3]) if methode == 2 else \
+                        single_draw(1, unic, math.ceil(.2 * unic))
+            test_pos  = [range(i, i + step) for i in (n_test - 1) * step]
+            test_pos  = np.append([], test_pos).astype(int)
+            train_pos = [i for i in size if i not in test_pos]
+
+            print(*n_test, '\n')
+        case 3 :
+            """
+            Répartition des données d'entrainements et de validation de manière aléatoire (80-20).
+            """
+            train_pos, test_pos, _, _ = train_test_split(size, size, test_size = test_size,
+                                                         random_state = random_state)
+        case 4 :
+            """
+            On utilise les 'runs' 1 et 2 d'un participent tiré au hasard pour les données de validations.
+            Et, les résultats du 'run' 3 (sans les données du participant tiré au hasard) pour les données d'entrainements.
+            Répartion train : 80 / test : 20 
+            """
+            n_test    = np.random.randint(1, unic) - 1
+            i         = n_test * step
+            test_pos  = range(i, i + step)
+            train_pos = [i for i in size[:: -3] if i not in test_pos]
+            test_pos  = test_pos[: step - 1]
+
+            # print(f"{len(train_pos) / (len(train_pos) + len(test_pos)) :.2%}")
+        case _ :
+            """
+            On utilise les résultats du 'run' 3 pour l'entrainement.
+            Et, les résultats des 'runs' 1 et 2 pour les données de validation.
+            Il y a moins de données d'ntrainement (1/3) que de validation (2/3)
+            """
+            train_pos = np.flip(size[:: -3])
+            test_pos  = [i for i in size if i not in train_pos]
+
+            # print(f"{len(train_pos) / n_files :.2%}")
+
+    # -------------------- Train --------------------
+    train_files = files[train_pos]
+    train_csv   = [entrants[i] for i in train_pos]
+    train_label = [targets[i] for i in train_pos]
+    # --------------------- Test --------------------
+    test_files  = files[test_pos]
+    test_csv    = [entrants[i] for i in test_pos]
+    test_label  = [targets[i] for i in test_pos]
+
+    print("Fichiers d'entrainements :\n ", *train_files)
+    print()
+    print("Fichiers tests :\n ", *test_files)
+    print()
+
+    return train_csv, train_label, test_csv, test_label
+
+### %%time
+def spliting(datas : list[Board], labels : list[Board] | None, Channels : Clause,
+             events : int | Index, chunk_size : int, gap : int, level : bool = True,
+             merge : bool = False) -> tuple[Index, Index, Index] :
+    temp  = [[], []]  # Les époques pour tous les cannaux et tous les évènements.
+    spots = [[], []]  # Apparitions des évènements
+    parts = []        #
+    
+    # Pour la standardisation du nombre d'échantillon max conservé
+    loop = [len(x['EventType']) for x in labels]
+    ceil = [min(loop)] * len(datas) if level else loop
+
+    if type(events) == int : events = range(events)
+
+    # Extraction des données relavitives à l'apparition des évènements.
+    for i in range(len(datas)) :
+        input = datas[i]
+        types = labels[i]['EventType'][: ceil[i]]
+        sites = np.where(input['EventStart'] == 1)[: ceil[i]]
+
+        parts.append(zero_removal(input[Channels[0]], 75))
+
+        for j in events :
+            spots[j].append(np.array(*sites)[*np.where(types == j)])
+
+            room = event_epochs(spots[j][-1], chunk_size, gap)
+
+            temp[j].append([full_event(input[c], room, merge) for c in Channels])
+
+    del loop, ceil
+
+    return temp, spots, parts
+
+###
+def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels : Clause,
+                    events : int | Index, chunk_size : int, gap : int, level : bool = True,
+                    merge : bool = False) -> tuple[Board, Index, Index] :
+    temp, spots, parts = spliting(datas, labels, Channels, events, chunk_size, gap,
+                                  level = level, merge = merge)
+
+    # Regroupement des données en fonction du type de l'évènement et du cannal d'observation
+    if merge :
+        n    = len(Channels)
+        temp = [[[np.append([], T[j :: n]) for T in temp[i]] for j in range(n)]
+                for i in events]
+    else :
+        # pool = [[np.stack(x, axis = 0) for x in T] for T in temp]
+        # temp = [np.concatenate(R, axis = 1) for R in pool]
+
+        pool = [[[], [], []], [[], [], []]]
+        
+        [[[[pool[i][j].append(x) for x in A] for j, A in enumerate(T)] for T in temp[i]]
+         for i in events]
+        
+        temp = pool
+
+        print(np.shape(temp))
+    
+    eras = [pd.DataFrame({**dict(zip(Channels, [pd.Series(X) for X in temp[i]])), 'EventType': i})
+            for i in events]
+    
+    del pool, temp
+    
+    gc.collect()
+
+    return eras, spots, parts
+
+###
+def torch_split(datas : list[Board], labels : list[Board] | None, Channels : Clause,
+                 events : int | Index, chunk_size : int, gap : int,
+                 level : bool = True) -> Tensor :
+    temp, _, _ = spliting(datas, labels, Channels, events, chunk_size, gap, level, False)
+    res        = [[np.stack(x, axis = 1) for x in T] for T in temp]
+    res        = [np.concatenate(R, axis = 0) for R in res]
+    
+    del temp
+    
+    gc.collect()
+
+    return Tensor(np.array(res))
 
 ### Calcul de l'énergie du signal dans une fenêtre glissante
 def signal_energy(data : Board | Vector, window_size : int) -> Vector :
@@ -282,3 +445,4 @@ def left_right_old(df : pd.DataFrame, events : list, size : int, canals, hand : 
 
 # print((d >> 5) << 5)
 # print((d // 32) * 32)
+# %%
