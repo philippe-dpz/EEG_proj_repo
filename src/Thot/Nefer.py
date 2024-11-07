@@ -130,7 +130,7 @@ def titre(txt : str, size : int) -> str :
 
 ### %%time
 def train_test_init(entrants : list[Board], targets : list[Board], files : Clause,
-               methode : int = -1, test_size : float = .2, random_state : int = 42) \
+               methode : int | None = None, test_size : float = .2, random_state : int = 42) \
         -> tuple[Clause, Clause, Clause, Clause] :
     n_files = len(files)
     size    = range(n_files)
@@ -200,7 +200,7 @@ def train_test_init(entrants : list[Board], targets : list[Board], files : Claus
 ### %%time
 def spliting(datas : list[Board], labels : list[Board] | None, Channels : Clause,
              events : int | Index, chunk_size : int, gap : int, level : bool = True,
-             merge : bool = False) -> tuple[Index, Index, Index] :
+             merge : bool = False, slide : bool = True) -> tuple[Index, Index, Index] :
     temp  = [[], []]  # Les époques pour tous les cannaux et tous les évènements.
     spots = [[], []]  # Apparitions des évènements
     parts = []        #
@@ -222,7 +222,7 @@ def spliting(datas : list[Board], labels : list[Board] | None, Channels : Clause
         for j in events :
             spots[j].append(np.array(*sites)[*np.where(types == j)])
 
-            room = event_epochs(spots[j][-1], chunk_size, gap)
+            room = event_epochs(spots[j][-1], chunk_size, gap, slide)
 
             temp[j].append([full_event(input[c], room, merge) for c in Channels])
 
@@ -233,9 +233,9 @@ def spliting(datas : list[Board], labels : list[Board] | None, Channels : Clause
 ###
 def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels : Clause,
                     events : int | Index, chunk_size : int, gap : int, level : bool = True,
-                    merge : bool = False) -> tuple[Board, Index, Index] :
+                    merge : bool = False, slide : bool = True) -> tuple[Board, Index, Index] :
     temp, spots, parts = spliting(datas, labels, Channels, events, chunk_size, gap,
-                                  level = level, merge = merge)
+                                  level = level, merge = merge, slide = slide)
 
     # Regroupement des données en fonction du type de l'évènement et du cannal d'observation
     if merge :
@@ -266,8 +266,8 @@ def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels :
 
 ###
 def torch_split(datas : list[Board], labels : list[Board] | None, Channels : Clause,
-                 events : int | Index, chunk_size : int, gap : int) -> Tensor :
-    temp, _, _ = spliting(datas, labels, Channels, events, chunk_size, gap, merge = False)
+                 events : int | Index, chunk_size : int, gap : int, slide : bool = True) -> Tensor :
+    temp, _, _ = spliting(datas, labels, Channels, events, chunk_size, gap, merge = False, slide = slide)
     res        = [[np.stack(x, axis = 1) for x in T] for T in temp]
     res        = [np.concatenate(R, axis = 0) for R in res]
     res        = np.concatenate(res, axis = 0) # [ for R in res]
@@ -326,18 +326,15 @@ def find_peaks_pos(data : Board | Vector, scope : int) -> tuple[Index, Index] :
      
     return pos, neg
 
-### 
-def compare(A : Board | Vector, B : Board | Vector) -> Board :
-    # return pd.DataFrame({'A' : list(A), 'B' : list(B)})
-    return pd.DataFrame(list(A), list(B))
-
 ###
 def full_event(data : Board | Vector, tracks : list[Index], flatten : bool = True) -> Vector :
     return np.array(data)[tracks].flatten() if flatten else np.array(data)[tracks]
 
 ###
-def event_epochs(cuts : Vector | list, period : int, lag : int | None = 0) -> Vector :
-    return np.array([range(x - lag, x - lag + period) for x in cuts])
+def event_epochs(cuts : Vector | list, period : int, lag : int | None = 0, slide : bool = True) -> Vector :
+    if slide : return np.array([range(x + lag, x + lag + period) for x in cuts])
+
+    return np.array([range(x + lag, x + period) for x in cuts])
 
 ### 
 def normalized(data : Board | Vector) -> Board | Vector :
