@@ -266,11 +266,11 @@ def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels :
 
 ###
 def torch_split(datas : list[Board], labels : list[Board] | None, Channels : Clause,
-                 events : int | Index, chunk_size : int, gap : int,
-                 level : bool = True) -> Tensor :
-    temp, _, _ = spliting(datas, labels, Channels, events, chunk_size, gap, level, False)
+                 events : int | Index, chunk_size : int, gap : int) -> Tensor :
+    temp, _, _ = spliting(datas, labels, Channels, events, chunk_size, gap, merge = False)
     res        = [[np.stack(x, axis = 1) for x in T] for T in temp]
     res        = [np.concatenate(R, axis = 0) for R in res]
+    res        = np.concatenate(res, axis = 0) # [ for R in res]
     
     del temp
     
