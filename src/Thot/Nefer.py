@@ -230,6 +230,7 @@ def spliting(datas : list[Board], labels : list[Board] | None, Channels : Clause
 
     return temp, spots, parts
 
+"""
 ###
 def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels : Clause,
                     events : int | Index, chunk_size : int, gap : int, level : bool = True,
@@ -263,6 +264,7 @@ def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels :
     gc.collect()
 
     return eras, spots, parts
+"""
 
 ###
 def torch_split(datas : list[Board], labels : list[Board] | None, Channels : Clause,
