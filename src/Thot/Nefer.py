@@ -201,21 +201,20 @@ def train_test_init(entrants : list[Board], targets : list[Board], files : Claus
 def spliting(datas : list[Board], labels : list[Board] | None, Channels : Clause,
              events : int | Index, chunk_size : int, gap : int, level : bool = True,
              merge : bool = False, slide : bool = True) -> tuple[Index, Index, Index] :
-    temp  = [[], []]  # Les époques pour tous les cannaux et tous les évènements.
-    spots = [[], []]  # Apparitions des évènements
-    parts = []        #
-    
-    # Pour la standardisation du nombre d'échantillon max conservé
-    loop = [len(x['EventType']) for x in labels]
-    ceil = [min(loop)] * len(datas) if level else loop
-
     if type(events) == int : events = range(events)
+
+    temp  = [[] for _ in events]    # Les époques pour tous les cannaux et tous les évènements.
+    spots = [[] for _ in events]    # Apparitions des évènements
+    parts = []                      #
+    # Pour la standardisation du nombre d'échantillon max conservé
+    loop  = [x.shape[0] for x in labels]
+    ceil  = [min(loop)] * len(datas) if level else loop
 
     # Extraction des données relavitives à l'apparition des évènements.
     for i in range(len(datas)) :
         input = datas[i]
-        types = labels[i]['EventType'][: ceil[i]]
-        sites = np.where(input['EventStart'] == 1)[: ceil[i]]
+        types = labels[i].iloc[: ceil[i], -1]                   # labels[i]['EventType'][: ceil[i]]
+        sites = np.where(input['EventStart'] == 1)[: ceil[i]]   #
 
         parts.append(zero_removal(input[Channels[0]], 75))
 
@@ -312,8 +311,8 @@ def zero_aggregator(data : Board | Vector) -> Vector :
 
 ### Runs are separated by 100 missing values, encoded as the negative maximum values.
 ### D'après la définition il y a 100 valeurs continue. Mais, on ne tiendra pas compte de cette information.
-def zero_removal(data : Board | Vector, step : int | None = 100) -> Vector :
-    parts = np.where(abs(data) >= step)[0]
+def zero_removal(data : Board | Vector, threshold : int | None = 100) -> Vector :
+    parts = np.where(abs(data) >= threshold)[0]
 
     if len(parts) == 0 : return [(0, len(data))]
     
