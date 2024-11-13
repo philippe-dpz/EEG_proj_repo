@@ -19,6 +19,79 @@ type Index    = list[int] | range
 type Vector   = list[float] | np.ndarray | Index
 type Board    = pd.Series | pd.DataFrame
 
+class Gramm_DatasLoader(object) :
+    runs, target, files = None, None, None
+    
+    # Deux enregistrements bipolaires + neutre
+    eeg_Chans = ['C3', 'C4', 'Cz']
+    # Trois enregistrements musculaires
+    ecg_Chans = ['EOG:ch01', 'EOG:ch02', 'EOG:ch03']
+
+    def __init__(self, path : str, rep : str, target : bool = True) :        
+        if Gramm_DatasLoader.runs == None :
+            Gramm_DatasLoader.files = [x[len(f'{rep}/') :] for x in files_in_zip(path, directory = rep)]
+            Gramm_DatasLoader.runs  = csv_in_zip(path, directory = rep, files = self.files)
+
+            if target :
+                Gramm_DatasLoader.target = csv_in_zip(path, directory = f'y_{rep}_only', files = self.files)
+        else :
+            print("-- Static Class --")
+
+    # @classmethod  
+    def __getitem__(self, index : int | Index) :
+        return self.runs[index], self.target[index]
+
+    def __getattribute__(self, name : str) :
+        return super(Gramm_DatasLoader, self).__getattribute__(name)
+
+    # def transform(self, threshold : float = 100) :
+    #     self.runs_hat = []
+
+    #     for run in self.runs :
+    #         self.runs_hat.append(run[abs(run[self.ecg_Chans[0]]) < threshold].reset_index())
+
+    #     return self.runs_hat
+        
+class Gramm() :
+    def __init__(self, datas : list[Board], labels : list[Board] | None, Channels : Clause,
+                 events : int | Index, chunk_size : int, gap : int, level : bool = True,
+                 merge : bool = False, slide : bool = True) :
+        runs, self.spots, self.parts = spliting(datas, labels, Channels, events, chunk_size, gap,
+                                                level = level, merge = merge, slide = slide)
+        
+        # Regroupement des données en fonction du type de l'évènement et du cannal d'observation
+        if merge :
+            loop   = range(len(Channels))
+            n      = len(Channels)
+            self.X = [[[np.append([], T[j :: n]) for T in runs[i]] for j in loop] for i in events]
+        else :
+            self.X = [np.concatenate(R, axis = 1) for R in runs]
+            self.X = np.concatenate([np.stack(R, axis = 1) for R in self.X])
+
+        self.y = np.concatenate([[i] * (self.X.shape[0] >> 1) for i in events])
+        
+        print('-> X :', *self.X.shape, '| y :', *self.y.shape)
+        
+        del runs
+        
+        gc.collect()
+        
+    def __len__(self) : return self.len(self.X)
+        
+    def __getitem__(self, index) : return self.X[index], self.y[index]
+    
+    def shuffle(self, transform = None) -> tuple[Vector, Vector] :
+        pos = np.random.permutation(range(len(self.X)))
+
+        X = (self.X if transform == None else transform(self.X))
+
+        return X[pos], self.y[pos]
+    
+    def tensor(self) : return Tensor(self.X), Tensor(self.y)
+
+    # def __getattribute__(self, _) :
+    #     return self.trains
+
 ### Décorateur : Temps d'exécution d'une fonction
 def temps_execution(function : any) -> any:
     def timer(*args, **kwargs) :
@@ -253,7 +326,9 @@ def split_and_merge(datas : list[Board], labels : list[Board] | None, Channels :
         
         temp = pool
 
-        print(np.shape(temp))
+        # pool  = [[[] for _ in loop] for _ in events]
+        # temps = [[[[pool[i][j].append(x) for x in T[j]] for j in loop] for T in runs[i]] for i in events]
+        # runs  = pool
     
     eras = [pd.DataFrame({**dict(zip(Channels, [pd.Series(X) for X in temp[i]])), 'EventType': i})
             for i in events]
@@ -270,8 +345,7 @@ def torch_split(datas : list[Board], labels : list[Board] | None, Channels : Cla
                  events : int | Index, chunk_size : int, gap : int, slide : bool = True) -> Tensor :
     temp, _, _ = spliting(datas, labels, Channels, events, chunk_size, gap, merge = False, slide = slide)
     res        = [[np.stack(x, axis = 1) for x in T] for T in temp]
-    res        = [np.concatenate(R, axis = 0) for R in res]
-    res        = np.concatenate(res, axis = 0) # [ for R in res]
+    res        = np.concatenate([np.concatenate(R, axis = 0) for R in res])
     
     del temp
     
