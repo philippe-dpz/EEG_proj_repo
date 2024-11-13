@@ -38,8 +38,8 @@ class Gramm_DatasLoader(object) :
             print("-- Static Class --")
 
     # @classmethod  
-    def __getitem__(self, index : int | Index) :
-        return self.runs[index], self.target[index]
+    # def __getitem__(self, index : int | Index) :
+    #     return self.runs[index], self.target[index]
 
     def __getattribute__(self, name : str) :
         return super(Gramm_DatasLoader, self).__getattribute__(name)
