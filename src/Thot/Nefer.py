@@ -70,16 +70,16 @@ class Gramm() :
 
         self.y = np.concatenate([[i] * (self.X.shape[0] >> 1) for i in events])
         
-        print('-> X :', *self.X.shape, '| y :', *self.y.shape)
-        
         del runs
         
         gc.collect()
-        
+
     def __len__(self) : return self.len(self.X)
         
     def __getitem__(self, index) : return self.X[index], self.y[index]
     
+    def size_str(self) : print('-> X :', *self.X.shape, '| y :', *self.y.shape)
+        
     def shuffle(self, transform = None) -> tuple[Vector, Vector] :
         pos = np.random.permutation(range(len(self.X)))
 
