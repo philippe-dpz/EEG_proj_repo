@@ -203,8 +203,8 @@ def titre(txt : str, size : int) -> str :
 
 ### %%time
 def train_test_init(entrants : list[Board], targets : list[Board], files : Clause,
-               methode : int | None = None, test_size : float = .2, random_state : int = 42) \
-        -> tuple[Clause, Clause, Clause, Clause] :
+               methode : int | None = None, reverse : bool = False, test_size : float = .2,
+               random_state : int = 42) -> tuple[Clause, Clause, Clause, Clause] :
     n_files = len(files)
     size    = range(n_files)
     files   = np.array(files)
@@ -255,6 +255,8 @@ def train_test_init(entrants : list[Board], targets : list[Board], files : Claus
             test_pos  = [i for i in size if i not in train_pos]
 
             # print(f"{len(train_pos) / n_files :.2%}")
+
+    if reverse : train_pos, test_pos = test_pos, train_pos
 
     # -------------------- Train --------------------
     train_csv   = [entrants[i] for i in train_pos]
