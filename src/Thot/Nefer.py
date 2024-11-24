@@ -19,7 +19,7 @@ type Index    = list[int] | range
 type Vector   = list[float] | np.ndarray | Index
 type Board    = pd.Series | pd.DataFrame
 
-class Gramm_DatasLoader(object) :
+class Graphein_DatasLoader(object) :
     runs, target, files = None, None, None
     
     # Deux enregistrements bipolaires + neutre
@@ -28,12 +28,12 @@ class Gramm_DatasLoader(object) :
     ecg_Chans = ['EOG:ch01', 'EOG:ch02', 'EOG:ch03']
 
     def __init__(self, path : str, rep : str, target : bool = True) :        
-        if Gramm_DatasLoader.runs == None :
-            Gramm_DatasLoader.files = [x[len(f'{rep}/') :] for x in files_in_zip(path, directory = rep)]
-            Gramm_DatasLoader.runs  = csv_in_zip(path, directory = rep, files = self.files)
+        if Graphein_DatasLoader.runs == None :
+            Graphein_DatasLoader.files = [x[len(f'{rep}/') :] for x in files_in_zip(path, directory = rep)]
+            Graphein_DatasLoader.runs  = csv_in_zip(path, directory = rep, files = self.files)
 
             if target :
-                Gramm_DatasLoader.target = csv_in_zip(path, directory = f'y_{rep}_only', files = self.files)
+                Graphein_DatasLoader.target = csv_in_zip(path, directory = f'y_{rep}_only', files = self.files)
         else :
             print("-- Static Class --")
 
@@ -42,7 +42,7 @@ class Gramm_DatasLoader(object) :
     #     return self.runs[index], self.target[index]
 
     def __getattribute__(self, name : str) :
-        return super(Gramm_DatasLoader, self).__getattribute__(name)
+        return super(Graphein_DatasLoader, self).__getattribute__(name)
 
     # def transform(self, threshold : float = 100) :
     #     self.runs_hat = []
@@ -52,7 +52,7 @@ class Gramm_DatasLoader(object) :
 
     #     return self.runs_hat
         
-class Gramm() :
+class Graphein() :
     def __init__(self, datas : list[Board], labels : list[Board] | None, Channels : Clause,
                  events : int | Index, chunk_size : int, gap : int, level : bool = True,
                  merge : bool = False, slide : bool = True) :
