@@ -1,17 +1,16 @@
 ### Chargement des différentes librairies
+import pandas as pd         # type: ignore
+import numpy as np          # type: ignore
 
-import pandas as pd
-import numpy as np
-
-import math, time, mne, gc
+import math, time, gc, mne  # type: ignore
 
 from typing_extensions import deprecated # type: ignore
 
 from zipfile import ZipFile
-from scipy import signal, stats
+from scipy import signal, stats # type: ignore
 
-from sklearn.model_selection import train_test_split
-from torch import Tensor
+from sklearn.model_selection import train_test_split # type: ignore
+from torch import Tensor # type: ignore
 
 type LComplex = list[complex]
 type Clause   = list[str]
