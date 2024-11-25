@@ -55,8 +55,9 @@ class Graphein() :
     def __init__(self, datas : list[Board], labels : list[Board] | None, Channels : Clause,
                  events : int | Index, chunk_size : int, gap : int, level : bool = True,
                  merge : bool = False, slide : bool = True) :
-        runs, self.spots, self.parts = spliting(datas, labels, Channels, events, chunk_size, gap,
+        runs, self.spots, self.parts = spliting(datas, labels, channels, events, chunk_size, gap,
                                                 level = level, merge = merge, slide = slide)
+        self.channels = Channels
         
         # Regroupement des données en fonction du type de l'évènement et du cannal d'observation
         if merge :
@@ -75,6 +76,7 @@ class Graphein() :
 
     def __len__(self) : return self.len(self.X)
         
+    # @overload
     def __getitem__(self, index) : return self.X[index], self.y[index]
     
     def size_str(self) : print('-> X :', *self.X.shape, '| y :', *self.y.shape)
