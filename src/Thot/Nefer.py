@@ -52,17 +52,17 @@ class Graphein_DatasLoader(object) :
     #     return self.runs_hat
         
 class Graphein() :
-    def __init__(self, datas : list[Board], labels : list[Board] | None, Channels : Clause,
+    def __init__(self, datas : list[Board], labels : list[Board] | None, channels : Clause,
                  events : int | Index, chunk_size : int, gap : int, level : bool = True,
                  merge : bool = False, slide : bool = True) :
         runs, self.spots, self.parts = spliting(datas, labels, channels, events, chunk_size, gap,
                                                 level = level, merge = merge, slide = slide)
-        self.channels = Channels
+        self.channels = channels
         
         # Regroupement des données en fonction du type de l'évènement et du cannal d'observation
         if merge :
-            loop   = range(len(Channels))
-            n      = len(Channels)
+            loop   = range(len(channels))
+            n      = len(channels)
             self.X = [[[np.append([], T[j :: n]) for T in runs[i]] for j in loop] for i in events]
         else :
             self.X = [np.concatenate(R, axis = 1) for R in runs]
@@ -74,7 +74,7 @@ class Graphein() :
         
         gc.collect()
 
-    def __len__(self) : return self.len(self.X)
+    def __len__(self) : return len(self.X)
         
     # @overload
     def __getitem__(self, index) : return self.X[index], self.y[index]
