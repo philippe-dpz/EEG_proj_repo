@@ -18,6 +18,7 @@ type Index    = list[int] | range
 type Vector   = list[float] | np.ndarray | Index
 type Board    = pd.Series | pd.DataFrame
 
+# %%
 class Graphein_DatasLoader(object) :
     runs, target, files = None, None, None
     
@@ -50,7 +51,8 @@ class Graphein_DatasLoader(object) :
     #         self.runs_hat.append(run[abs(run[self.ecg_Chans[0]]) < threshold].reset_index())
 
     #     return self.runs_hat
-        
+
+# %%   
 class Graphein() :
     def __init__(self, datas : list[Board], labels : list[Board] | None, channels : Clause,
                  events : int | Index, chunk_size : int, gap : int, level : bool = True,
@@ -514,8 +516,9 @@ def left_right_old(df : pd.DataFrame, events : list, size : int, canals, hand : 
 
     return pd.DataFrame({'signal_epoched' : res, 'canal' : canals, 'hand' : hand, 'data_split' : [events for _ in lp]})
 
-# d = 511
+# %%
+d = 511
 
-# print((d >> 5) << 5)
-# print((d // 32) * 32)
+print((d >> 5) << 5)
+print((d // 32) * 32)
 # %%
