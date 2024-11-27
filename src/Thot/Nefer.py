@@ -22,6 +22,8 @@ type Board    = pd.Series | pd.DataFrame
 class Graphein_DatasLoader(object) :
     runs, target, files = None, None, None
     
+    # Correspondance pour la classification
+    hands_event = {0: 'Left', 1: 'Right'}
     # Deux enregistrements bipolaires + neutre
     eeg_Chans = ['C3', 'C4', 'Cz']
     # Trois enregistrements musculaires
