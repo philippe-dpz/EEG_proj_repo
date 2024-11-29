@@ -1,8 +1,6 @@
 ### Chargement des différentes librairies
-import pandas as pd         # type: ignore
-import numpy as np          # type: ignore
-
-import math, time, gc, mne  # type: ignore
+import math, time, gc, mne          # type: ignore
+import pandas as pd, numpy as np    # type: ignore
 
 from typing_extensions import deprecated # type: ignore
 
@@ -21,7 +19,6 @@ type Board    = pd.Series | pd.DataFrame
 # %%
 class Graphein_DatasLoader(object) :
     runs, target, files = None, None, None
-    
     # Correspondance pour la classification
     hands_event = {0: 'Left', 1: 'Right'}
     # Deux enregistrements bipolaires + neutre
@@ -29,22 +26,22 @@ class Graphein_DatasLoader(object) :
     # Trois enregistrements musculaires
     ecg_Chans = ['EOG:ch01', 'EOG:ch02', 'EOG:ch03']
 
-    def __init__(self, path : str, rep : str, target : bool = True) :        
+    def __init__(self, path : str, rep : str, target : str | None = None) :        
         if Graphein_DatasLoader.runs == None :
             Graphein_DatasLoader.files = [x[len(f'{rep}/') :] for x in files_in_zip(path, directory = rep)]
             Graphein_DatasLoader.runs  = csv_in_zip(path, directory = rep, files = self.files)
 
             if target :
-                Graphein_DatasLoader.target = csv_in_zip(path, directory = f'y_{rep}_only', files = self.files)
+                Graphein_DatasLoader.target = csv_in_zip(path, directory = target.format(rep), files = self.files)
         else :
             print("-- Static Class --")
+
+    def __getattribute__(self, name : str) :
+        return super(Graphein_DatasLoader, self).__getattribute__(name)
 
     # @classmethod  
     # def __getitem__(self, index : int | Index) :
     #     return self.runs[index], self.target[index]
-
-    def __getattribute__(self, name : str) :
-        return super(Graphein_DatasLoader, self).__getattribute__(name)
 
     # def transform(self, threshold : float = 100) :
     #     self.runs_hat = []
@@ -210,56 +207,54 @@ def titre(txt : str, size : int) -> str :
 def train_test_init(entrants : list[Board], targets : list[Board], files : Clause,
                methode : int | None = None, reverse : bool = False, test_size : float = .2,
                random_state : int = 42) -> tuple[Clause, Clause, Clause, Clause] :
+    files   = np.array(files)
     n_files = len(files)
     size    = range(n_files)
-    files   = np.array(files)
     unic    = len(np.unique([x[2] for x in files]))
     step    = n_files // unic
 
     match methode :
         case 1 | 2 :
-            """
-            Le cas 2 est utilisé pour test.
-            Les résultats du 'run' 3 ne sont pas utilisés.
-            """
-            files     = np.array([f for f in files if f not in files[:: -3]])
-            size      = range(len(files))
+            print(
+                    "Le cas 2 est utilisé pour test.\n"
+                    "Les résultats du 'run' 3 ne sont pas utilisés."
+                )
+            files    = np.array([f for f in files if f not in files[:: -3]])
+            size      = len(files)
             n_test    = np.array([1, 3]) if methode == 2 else \
-                        single_draw(1, unic, math.ceil(.2 * unic))
-            test_pos  = [range(i, i + step) for i in (n_test - 1) * step]
-            test_pos  = np.append([], test_pos).astype(int)
-            train_pos = [i for i in size if i not in test_pos]
+                        single_draw(1, unic, math.ceil(test_size * unic))
+            step      = size // unic
+            test_pos  = np.concatenate([np.arange(step) + i for i in (n_test - 1) * step])
+            train_pos = [i for i in range(size) if i not in test_pos]
 
-            print(*n_test, '\n')
+            print("Choix ->", *n_test, '\n')
         case 3 :
-            """
-            Répartition des données d'entrainements et de validation de manière aléatoire (80-20).
-            """
+            print(
+                    "Répartition des données d'entrainements et de validation de manière aléatoire (80-20).\n"
+                )
             train_pos, test_pos, _, _ = train_test_split(size, size, test_size = test_size,
                                                          random_state = random_state)
         case 4 :
-            """
-            On utilise les 'runs' 1 et 2 d'un participent tiré au hasard pour les données de validations.
-            Et, les résultats du 'run' 3 (sans les données du participant tiré au hasard) pour les données d'entrainements.
-            Répartion train : 80 / test : 20 
-            """
-            n_test    = np.random.randint(1, unic) - 1
-            i         = n_test * step
-            test_pos  = range(i, i + step)
+            print(
+                    "On utilise les 'runs' 1 et 2 de participants tirés au hasard pour les données de validations.\n"
+                    "Et, les résultats du 'run' 3 (sans les données du participant tiré au hasard) pour les données d'entrainements.\n"
+                    "Répartion train : 80 / test : 20" 
+                )
+            nb        = math.ceil(test_size * unic)
+            n_test    = single_draw(1, unic, nb) # np.random.randint(1, unic) - 1
+            test_pos  = np.concatenate([np.arange(step) + i for i in (n_test * step)])
             train_pos = [i for i in size[:: -3] if i not in test_pos]
-            test_pos  = test_pos[: step - 1]
+            test_pos  = np.concatenate([test_pos[i :: step] for i in range(nb)])
 
-            # print(f"{len(train_pos) / (len(train_pos) + len(test_pos)) :.2%}")
+            print("Choix ->", *n_test, '\n')
         case _ :
-            """
-            On utilise les résultats du 'run' 3 pour l'entrainement.
-            Et, les résultats des 'runs' 1 et 2 pour les données de validation.
-            Il y a moins de données d'ntrainement (1/3) que de validation (2/3)
-            """
+            print(
+                    "On utilise les résultats du 'run' 3 pour l'entrainement.\n"
+                    "Et, les résultats des 'runs' 1 et 2 pour les données de validation.\n"
+                    "Il y a moins de données d'ntrainement (1/3) que de validation (2/3)\n"
+                )
             train_pos = np.flip(size[:: -3])
             test_pos  = [i for i in size if i not in train_pos]
-
-            # print(f"{len(train_pos) / n_files :.2%}")
 
     if reverse : train_pos, test_pos = test_pos, train_pos
 
@@ -519,8 +514,8 @@ def left_right_old(df : pd.DataFrame, events : list, size : int, canals, hand : 
     return pd.DataFrame({'signal_epoched' : res, 'canal' : canals, 'hand' : hand, 'data_split' : [events for _ in lp]})
 
 # %%
-d = 511
+d = 511;
 
-print((d >> 5) << 5)
-print((d // 32) * 32)
+# print((d >> 5) << 5)
+# print((d // 32) * 32)
 # %%
