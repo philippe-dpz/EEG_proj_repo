@@ -209,54 +209,74 @@ def train_test_init(entrants : list[Board], targets : list[Board], files : Claus
                random_state : int = 42) -> tuple[Clause, Clause, Clause, Clause] :
     files   = np.array(files)
     n_files = len(files)
-    size    = range(n_files)
     unic    = len(np.unique([x[2] for x in files]))
+    size    = range(n_files)
     step    = n_files // unic
+    run3    = np.array(size[2 :: 3])
+    nb      = math.ceil(test_size * unic)
+    n_test  = np.array([1, 3]) - 1 if methode == 1 else single_draw(1, unic + 1, nb) - 1
+    run_txt = ["Le 'run' 3 est utilisé", "Les 'runs' 1 et 2 sont utilisés"]
+    
+    if reverse : run_txt = np.flip(run_txt)
 
     match methode :
-        case 1 | 2 :
-            print(
-                    "Le cas 2 est utilisé pour test.\n"
-                    "Les résultats du 'run' 3 ne sont pas utilisés."
-                )
-            files    = np.array([f for f in files if f not in files[:: -3]])
-            size      = len(files)
-            n_test    = np.array([1, 3]) if methode == 2 else \
-                        single_draw(1, unic, math.ceil(test_size * unic))
-            step      = size // unic
-            test_pos  = np.concatenate([np.arange(step) + i for i in (n_test - 1) * step])
-            train_pos = [i for i in range(size) if i not in test_pos]
+        case 0 | 1 | 2:
+            print("\rChoix ->", *n_test + 1, '\n')
 
-            print("Choix ->", *n_test, '\n')
-        case 3 :
-            print(
-                    "Répartition des données d'entrainements et de validation de manière aléatoire (80-20).\n"
-                )
-            train_pos, test_pos, _, _ = train_test_split(size, size, test_size = test_size,
-                                                         random_state = random_state)
-        case 4 :
-            print(
-                    "On utilise les 'runs' 1 et 2 de participants tirés au hasard pour les données de validations.\n"
-                    "Et, les résultats du 'run' 3 (sans les données du participant tiré au hasard) pour les données d'entrainements.\n"
-                    "Répartion train : 80 / test : 20" 
-                )
-            nb        = math.ceil(test_size * unic)
-            n_test    = single_draw(1, unic, nb) # np.random.randint(1, unic) - 1
-            test_pos  = np.concatenate([np.arange(step) + i for i in (n_test * step)])
-            train_pos = [i for i in size[:: -3] if i not in test_pos]
-            test_pos  = np.concatenate([test_pos[i :: step] for i in range(nb)])
+            if methode == 0:
+                print(
+                        "Seuls les résultats du 'run 3' est utilisé."
+                    )
+                
+                reduct = run3
+            else:
+                print(
+                        "Le cas 2 est utilisé pour test.\n"
+                        "Les résultats du 'run' 3 ne sont pas utilisés.\n"
+                    )
+                
+                reduct = np.array([i for i in size if i not in run3])
+                step   = len(reduct) // unic
+                n_test = np.concatenate([np.arange(step) + i for i in n_test * step])
 
-            print("Choix ->", *n_test, '\n')
+            test_pos  = reduct[n_test]
+            train_pos = [i for i in reduct if i not in test_pos]
+        case 3:
+            print(
+                    "\rChoix ->", *n_test + 1, '\n\n'
+                    f"{run_txt[0]} pour le tirage au sort des participants pour les données de validation.\n"
+                    f"{run_txt[1]} (sans les données des participants tirés au hasard) pour les données d'entrainement.\n"
+                    "Répartition : 80/20\n" 
+                )
+            
+            test_pos = np.concatenate([np.arange(step) + i for i in n_test * step])
+
+            if reverse:
+                train_pos = [i for i in size if i not in np.unique(np.append(test_pos, run3))]
+                test_pos  = run3[n_test]
+            else:
+                train_pos = [i for i in run3 if i not in test_pos]
+                test_pos  = np.concatenate([test_pos[i :: step] for i in range(nb)])
+        case 4:
+            print(
+                    "Répartition des données d'entrainements et de validation de manière aléatoire (80/20).\n"
+                )
+            
+            train_pos, test_pos, _, _ = train_test_split(size, size, test_size=test_size, random_state=random_state)
         case _ :
+            ratio = [2, 1] if reverse else [1, 2]
+
             print(
-                    "On utilise les résultats du 'run' 3 pour l'entrainement.\n"
-                    "Et, les résultats des 'runs' 1 et 2 pour les données de validation.\n"
-                    "Il y a moins de données d'ntrainement (1/3) que de validation (2/3)\n"
+                    f"{run_txt[0]} pour les résultats pour l'entrainement.\n"
+                    f"{run_txt[1]} pour les données de validation.\n"
+                    f"Il y a ~{ratio[0]}/3 de données d'entrainement et ~{ratio[1]}/3 de validation\n"
+                    "** Risque de biais d'apprentissage ? **\n"
                 )
-            train_pos = np.flip(size[:: -3])
+            
+            train_pos = run3
             test_pos  = [i for i in size if i not in train_pos]
 
-    if reverse : train_pos, test_pos = test_pos, train_pos
+            if reverse : train_pos, test_pos = test_pos, train_pos
 
     # -------------------- Train --------------------
     train_csv   = [entrants[i] for i in train_pos]
@@ -265,10 +285,8 @@ def train_test_init(entrants : list[Board], targets : list[Board], files : Claus
     test_csv    = [entrants[i] for i in test_pos]
     test_label  = [targets[i] for i in test_pos]
 
-    print("Fichiers d'entrainements :\n ", *files[train_pos])
-    print()
+    print("Fichiers d'entrainements :\n ", *files[train_pos], '\n')
     print("Fichiers tests :\n ", *files[test_pos])
-    print()
 
     return train_csv, train_label, test_csv, test_label
 
