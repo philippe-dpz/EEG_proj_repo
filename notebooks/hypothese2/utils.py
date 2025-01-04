@@ -169,7 +169,7 @@ def plot_eeg_topomap_animation(
     save_filename_animation,
     start_time=0.00,
     end_time=3.5,
-    step_size=0.01,
+    step_size=0.02,
     frame_rate=10,
 ):
     conditions = ["1", "2"]
@@ -181,10 +181,10 @@ def plot_eeg_topomap_animation(
         for c in evoked.keys():
             fig, anim = evoked[c].animate_topomap(
                 times=np.arange(start_time, end_time, step_size),
-                frame_rate=frame_rate,
                 butterfly=True,
                 blit=False,
             )
+            fig.set_size_inches(2, 2)
             anim.save(MODELS_TEST_PATH + save_filename_animation + "_" + c + ".gif")
 
 
