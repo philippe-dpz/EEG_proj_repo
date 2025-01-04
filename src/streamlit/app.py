@@ -13,7 +13,7 @@ dataset_analyse_page = st.Page(
 
 dataset_pretraitement_page = st.Page(
     "projet/dataset_pretraitement.py",
-    title="Pré-traitement des données",
+    title="Prétraitement des données",
     icon=puce_icon,
 )
 

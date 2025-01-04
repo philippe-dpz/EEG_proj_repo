@@ -3,7 +3,7 @@ from PIL import Image
 
 st.markdown("# Méthode 3")
 
-st.markdown("# Pré-traitement")
+st.markdown("# Prétraitement")
 st.markdown(
     """<div style="text-align: justify;">Dans cette partie nous nous intéresserons principalement aux enregistrements des sessions3. C’est-à-dire les enregistrements NF pour lesquels nous disposons du résultat de classification. Nous constatons que le changement de protocole expérimental et la répétition des sessions induit un changement influençant la structure des données enregistrées. Nous ne nous intéresserons qu’aux données EEG.""",
     unsafe_allow_html=True,

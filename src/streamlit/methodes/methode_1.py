@@ -6,7 +6,7 @@ st.markdown(
     """<div style="text-align: justify;">Cette méthode explore l'utilisation des techniques bien établies dans la recherche neuroscientifique.<br><br>L'objectif est de tirer parti des informations spatio-temporelles et fréquentielles contenues dans les signaux cérébraux afin de reconnaître les schémas neuronaux associés à cette activité mentale.<br>Nous nous appuyons sur des approches courantes, telles que l'analyse des spectres de densité de puissance, l'identification des rythmes sensorimoteurs (notamment µ et β), et des outils de filtrage spatial comme les filtres Common Spatial Patterns (CSP).</div>""",
     unsafe_allow_html=True,
 )
-st.markdown("## Pré-traitement")
+st.markdown("## Prétraitement")
 st.markdown(
     "- Filtre passe-bande entre 8 et 30 Hz, afin de nous concentrer sur les rythmes alpha (mu) et bêta"
 )

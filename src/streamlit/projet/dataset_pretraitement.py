@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 
-st.markdown("# Pré-traitement")
+st.markdown("# Prétraitement")
 st.markdown("Suite aux observations précédentes, nous avons appliqué un filtre passe-bande 1Hz-30hz")
 st.markdown("## Comparaison des signaux avant/après filtrage")
 img_signals = Image.open('./assets/signals_filtres.png')
