@@ -99,41 +99,10 @@ def create_epochs(raw, tmin=0, tmax=3.5, reference="average"):
     return epochs_ref
 
 
-""" extraction de caractéristiques 
-    Passage en mode fréquentiel sur C3 C4 sur une durée de 1 à 3s sur chaque epoch
-    Calcul de la différence C3-C4
-    Mise à L'échelle des données
-"""
+""" Transformation du dataframe pour obtenir une ligne de caractéristiques labellisée par tentative"""
 
 
-def extract_features(epocks):
-    freqs = np.arange(10.5, 12.5, 1)
-    dfs = []
-    idx = 0
-    for e in epocks:
-        tfr = e.compute_tfr(
-            tmin=1,
-            tmax=3,
-            method="morlet",
-            freqs=freqs,
-            n_cycles=freqs / 2,
-            return_itc=False,
-            picks=["C3", "C4"],
-            average=False,
-        )
-        df = tfr.to_data_frame()
-        df["id"] = idx
-        df.rename(columns={"condition": "eventType"}, inplace=True)
-        df.astype({"eventType": int})
-        dfs.append(df)
-        idx += 1
-
-    df = pd.concat(dfs)
-    df["C3-C4"] = df["C3"] - df["C4"]
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler.fit(df[["C3", "C4", "C3-C4"]])
-    df[["C3", "C4", "C3-C4"]] = scaler.transform(df[["C3", "C4", "C3-C4"]])
-    # Transformation du dataframe pour obtenir une ligne de caractéristiques labellisée par tentative
+def unstack_df(df):
     dfEvent = df[["id", "epoch", "eventType"]]
     dfEvent.drop_duplicates(inplace=True)
     dfEvent.set_index(["id", "epoch"], inplace=True)
@@ -159,6 +128,66 @@ def extract_features(epocks):
     df = pd.merge(df, dfEvent, on=["id", "epoch"])
     df.reset_index(inplace=True)
     return df
+
+
+""" extraction de caractéristiques 
+    Passage en mode fréquentiel sur C3 C4 sur une durée de 1 à 3s sur chaque epoch
+    Calcul de la différence C3-C4
+    Mise à L'échelle des données
+"""
+
+
+def extract_features(epocks, split):
+    freqs = np.arange(10.5, 12.5, 1)
+    dfTrain = []
+    dfTest = []
+    idx = 0
+    for e in epocks:
+        tfr = e.compute_tfr(
+            tmin=1,
+            tmax=3,
+            method="morlet",
+            freqs=freqs,
+            n_cycles=freqs / 2,
+            return_itc=False,
+            picks=["C3", "C4"],
+            average=False,
+        )
+        df = tfr.to_data_frame()
+        df["id"] = idx
+        df.rename(columns={"condition": "eventType"}, inplace=True)
+        df.astype({"eventType": int})
+        if split:
+            if idx > 6:
+                dfTest.append(df)
+            else:
+                dfTrain.append(df)
+        else:
+            dfTest.append(df)
+        idx += 1
+
+    dfTrain = pd.concat(dfTrain)
+    scaler = MinMaxScaler()
+    dfTrain[["C3","C4"]] = scaler.fit_transform(dfTrain[["C3","C4"]])
+    dfTrain["C3-C4"] = dfTrain["C3"] - dfTrain["C4"]
+    if split:
+        dfTtest = pd.concat(dfTest)
+        dfTtest[["C3", "C4"]] = scaler.transform(dfTtest[["C3", "C4"]])
+        dfTtest["C3-C4"] = dfTtest["C3"] - dfTtest["C4"]
+
+    # Transformation du dataframe pour obtenir une ligne de caractéristiques labellisée par tentative
+    dfTrain = unstack_df(dfTrain)
+    dfTtest = unstack_df(dfTtest)
+
+    y_test = dfTtest["eventType"]
+    y_train = dfTrain["eventType"]
+    dfTtest.drop(["eventType"], axis=1, inplace=True)
+    dfTrain.drop(["eventType"], axis=1, inplace=True)
+
+    dfTtest.drop(["id", "index"], axis=1, inplace=True)
+    dfTrain.drop(["id", "index"], axis=1, inplace=True)
+
+    return dfTrain, dfTtest, y_train, y_test
 
 
 """ Création d'une animation à partir des données du signal """
