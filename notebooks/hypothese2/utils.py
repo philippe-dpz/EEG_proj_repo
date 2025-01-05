@@ -11,9 +11,6 @@ TRAIN_ONLY_PATH = "../../data/raw/y_train_only/"
 MODELS_PATH = "../../models/"
 MODELS_TEST_PATH = "../../models/test/"
 
-FILTERS = [
-    {"name": "std", "l_cut": 1, "h_cut": 30},
-]
 SAMPLING_FREQ = 250
 STICHANNEL = "STI101"
 CHANNELS_LIST = ["C3", "Cz", "C4", STICHANNEL]
@@ -137,10 +134,11 @@ def unstack_df(df):
 """
 
 
-def extract_features(epocks, split):
+def extract_features(epocks, split, scaler):
     freqs = np.arange(10.5, 12.5, 1)
     dfTrain = []
     dfTest = []
+    y_test = []
     idx = 0
     for e in epocks:
         tfr = e.compute_tfr(
@@ -163,31 +161,33 @@ def extract_features(epocks, split):
             else:
                 dfTrain.append(df)
         else:
-            dfTest.append(df)
+            dfTrain.append(df)
         idx += 1
 
     dfTrain = pd.concat(dfTrain)
-    scaler = MinMaxScaler()
-    dfTrain[["C3","C4"]] = scaler.fit_transform(dfTrain[["C3","C4"]])
+    if (scaler == None):
+        scaler = MinMaxScaler()
+        scaler.fit(dfTrain[["C3","C4"]])
+    dfTrain[["C3", "C4"]] = scaler.transform(dfTrain[["C3", "C4"]])    
     dfTrain["C3-C4"] = dfTrain["C3"] - dfTrain["C4"]
     if split:
-        dfTtest = pd.concat(dfTest)
-        dfTtest[["C3", "C4"]] = scaler.transform(dfTtest[["C3", "C4"]])
-        dfTtest["C3-C4"] = dfTtest["C3"] - dfTtest["C4"]
+        dfTest = pd.concat(dfTest)
+        dfTest[["C3", "C4"]] = scaler.transform(dfTest[["C3", "C4"]])
+        dfTest["C3-C4"] = dfTest["C3"] - dfTest["C4"]
 
     # Transformation du dataframe pour obtenir une ligne de caractéristiques labellisée par tentative
     dfTrain = unstack_df(dfTrain)
-    dfTtest = unstack_df(dfTtest)
-
-    y_test = dfTtest["eventType"]
+    if split:
+        dfTest = unstack_df(dfTest)
+        y_test = dfTest["eventType"]
+        dfTest.drop(["eventType"], axis=1, inplace=True)    
+        dfTest.drop(["id", "index"], axis=1, inplace=True)
+        
     y_train = dfTrain["eventType"]
-    dfTtest.drop(["eventType"], axis=1, inplace=True)
     dfTrain.drop(["eventType"], axis=1, inplace=True)
-
-    dfTtest.drop(["id", "index"], axis=1, inplace=True)
     dfTrain.drop(["id", "index"], axis=1, inplace=True)
 
-    return dfTrain, dfTtest, y_train, y_test
+    return dfTrain, dfTest, y_train, y_test, scaler
 
 
 """ Création d'une animation à partir des données du signal """
