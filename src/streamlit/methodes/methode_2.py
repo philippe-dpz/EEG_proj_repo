@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from utils.utils import insert_png
 
 st.markdown("# Méthode 2")
@@ -34,9 +35,37 @@ insert_png("./assets/PSDM2.png")
 st.html(
     "<u>PSD entre 1 et 3 secondes sur la plage de fréquence 10.5 - 12.5Hz. Une différence nette entre le PSD de l’IM main gauche et droite est observable notamment pour les canaux C3 et C4.</u>"
 )
-
-st.markdown("## Analyse des résultats")
 st.markdown(
-    """<div style="text-align: justify;">Les meilleurs résultats sont obtenus avec LogistiqueRegression sur la plage de fréquences 10.5 - 12.5Hz et sur l’intervalle 1s - 3s""",
+    """<div style="text-align: justify;">Les meilleurs résultats sont obtenus sur la plage de fréquences 10.5 - 12.5Hz et sur l’intervalle 1s - 3s""",
     unsafe_allow_html=True,
 )
+
+st.markdown("## Analyse des résultats")
+st.markdown("- LogisticRegression")
+st.markdown("score: 0. 0.806")
+st.dataframe(
+    pd.DataFrame(
+        columns=["classe", "précision", "recall", "f1-score"],
+        data=[[1, 0.89, 0.70, 0.78], [2, 0.75, 0.91, 0.82]],
+    ),
+    hide_index=True,
+)
+st.markdown("- RandomForestClassifier")
+st.markdown("score: 0.8031")
+st.dataframe(
+    pd.DataFrame(
+        columns=["classe", "précision", "recall", "f1-score"],
+        data=[[1, 0.86, 0.72, 0.79], [2, 0.76, 0.88, 0.82]],
+    ),
+    hide_index=True,
+)
+st.markdown("- AdaBoostClassifier")
+st.markdown("score: 0.7906")
+st.dataframe(
+    pd.DataFrame(
+        columns=["classe", "précision", "recall", "f1-score"],
+        data=[[1, 0.87, 0.69, 0.77], [2, 0.74, 0.89, 0.81]],
+    ),
+    hide_index=True,
+)
+
