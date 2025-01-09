@@ -1,19 +1,19 @@
 import streamlit as st
-from PIL import Image
+from utils.utils import insert_png, insert_image_title
 
 st.markdown("# Analyse des données")
 st.markdown("## Visualisation des signaux bruts")
-img_signals = Image.open('./assets/signals.png')
-st.image(img_signals)
-st.html("<u>EEG brut sur 35 secondes (a) et sur 1 seconde (b). <br>Dans le signal (a) on observe l’activité cérébrale de deux epochs : un de l’IM gauche, un de l’IM droite.</u>")
+insert_png("./assets/signals.png")
+insert_image_title(
+    "EEG brut sur 35 secondes (a) et sur 1 seconde (b). <br>Dans le signal (a) on observe l’activité cérébrale de deux epochs : un de l’IM gauche, un de l’IM droite."
+)
 st.markdown("## Puissance du signal")
-img_psd = Image.open('./assets/psd.png')
-st.image(img_psd)
-st.html("<u>Puissance du signal brut sur une session.</u>")
+insert_png("./assets/psd.png")
+insert_image_title("Puissance du signal brut sur une session.")
 st.markdown("## Comparaison par classe")
-img_signals_comparaison = Image.open('./assets/signals_comparaison.png')
-st.image(img_signals_comparaison)
-st.html("<u>Comparaison des signaux moyens par type de tentative.</u>")
+insert_png("./assets/signals_comparaison.png")
+insert_image_title("Comparaison des signaux moyens par type de tentative")
 
-st.markdown("On remarque à travers ces différentes représentations que les signaux présentent du bruit, et que l'on peut réduire la plage des fréquences.")
-
+st.markdown(
+    "On remarque à travers ces différentes représentations que les signaux présentent du bruit, et que l'on peut réduire la plage des fréquences."
+)

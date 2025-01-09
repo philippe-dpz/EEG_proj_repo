@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from utils.utils import insert_png
 
 st.markdown("# Méthode 2")
 
@@ -27,12 +27,10 @@ Nous nous plaçons dans un espace Fréquence/Temps grâce au calcul TFR (revient
 )
 st.markdown("## Modélisation")
 st.markdown(
-    """<div style="text-align: justify;">Le jeu d'entraînement est constitué par les enregistrements des candidats 1 à 7, le jeu de test par ceux des candidats 8 et 9, ce choix est fait de façon arbitraire.Nous entraînons différents modèles, LogisticRegression, AdaBoostClassifier, SVM sur le jeu de données. A la vue des premiers résultats SVM ne semble pas adapté. Afin d'améliorer les performances, nous modifions les paramètres max_iter pour LogistiqueRegression et faisons un GridSearch sur AdaBoostClassifier. Nous effectuons également des entraînements sur une fenêtre temporelle glissante sur chaque époque. Ensuite nous essayons de réduire les fréquences utilisées.""",
+    """<div style="text-align: justify;">Le jeu d'entraînement est constitué par les enregistrements des candidats 1 à 7, le jeu de test par ceux des candidats 8 et 9, ce choix est fait de façon arbitraire.Nous entraînons différents modèles, LogisticRegression, AdaBoostClassifier, SVM sur le jeu de données. A la vue des premiers résultats SVM ne semble pas adapté. Afin d'améliorer les performances, nous modifions les paramètres max_iter pour LogistiqueRegression et faisons un GridSearch sur AdaBoostClassifier. Nous effectuons également des entraînements sur une fenêtre temporelle glissante sur chaque époque. Ensuite nous essayons de réduire les fréquences utilisées.<br><br>""",
     unsafe_allow_html=True,
 )
-img_psd = Image.open("./assets/PSDM2.png")
-st.image(img_psd, width=600)
-
+insert_png("./assets/PSDM2.png")
 st.html(
     "<u>PSD entre 1 et 3 secondes sur la plage de fréquence 10.5 - 12.5Hz. Une différence nette entre le PSD de l’IM main gauche et droite est observable notamment pour les canaux C3 et C4.</u>"
 )

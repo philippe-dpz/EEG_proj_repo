@@ -1,5 +1,5 @@
 import streamlit as st
-import base64
+from utils.utils import get_base64_of_bin_file
 
 puce_icon = ":material/arrow_circle_right:"
 projet_page = st.Page("projet/projet.py", title="Présentation", icon=puce_icon)
@@ -32,11 +32,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto",
 )
-
-def get_base64_of_bin_file(png_file: str) -> str:
-    with open(png_file, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
 
 @st.cache_resource
 def build_markup_for_logo(png_file: str) -> str:

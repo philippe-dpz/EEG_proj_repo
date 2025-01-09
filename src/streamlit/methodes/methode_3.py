@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from utils.utils import insert_svg, insert_image_title
 
 st.markdown("# Méthode 3")
 
@@ -30,18 +30,20 @@ st.markdown(
 )
 
 st.markdown("## Analyse des résultats")
-img_resultat1 = Image.open("./assets/resultat1M3.png")
-st.image(img_resultat1)
-
-img_resultat2 = Image.open("./assets/resultat2M3.png")
-st.image(img_resultat2)
-
-img_resultat3 = Image.open("./assets/resultat3M3.png")
-st.image(img_resultat3)
-
-st.html("<u>Accuracy des différents modèles</u>")
+insert_svg("./assets/resultat1M3.svg")
+insert_svg("./assets/resultat2M3.svg")
+insert_svg("./assets/resultat3M3.svg")
+insert_image_title("Accuracy des différents modèles")
 st.markdown(
     """<div style="text-align: justify;">
 Pour les résultats présentés ci-dessus, en abscisse sont représentés le temps de départ et de fin de la segmentation après le top départ de l'événement (“EventStart”), en nombre d'échantillons (le sampling rate étant de 250 Hz). Et, en ordonné le ratio obtenu.""",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """<div style="text-align: justify;">
+Les meilleurs résultats sont obtenus pour le model de classification DAL.<br><br>
+Nous obtenons un score de prédiction de 71% pour une la fenêtre 75-225 (à 300 milliseconde âpr
+le début de l’évènement pour se terminer 900 milliseconde après de début de l’évènement, soit une
+fenêtre d’environ 600 milliseconde)""",
     unsafe_allow_html=True,
 )
