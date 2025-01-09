@@ -1,12 +1,12 @@
 import streamlit as st
-from PIL import Image
+from utils.utils import insert_png, insert_image_title
 
 st.markdown("# Méthode 1")
 st.markdown(
     """<div style="text-align: justify;">Cette méthode explore l'utilisation des techniques bien établies dans la recherche neuroscientifique.<br><br>L'objectif est de tirer parti des informations spatio-temporelles et fréquentielles contenues dans les signaux cérébraux afin de reconnaître les schémas neuronaux associés à cette activité mentale.<br>Nous nous appuyons sur des approches courantes, telles que l'analyse des spectres de densité de puissance, l'identification des rythmes sensorimoteurs (notamment µ et β), et des outils de filtrage spatial comme les filtres Common Spatial Patterns (CSP).</div>""",
     unsafe_allow_html=True,
 )
-st.markdown("## Pré-traitement")
+st.markdown("## Prétraitement")
 st.markdown(
     "- Filtre passe-bande entre 8 et 30 Hz, afin de nous concentrer sur les rythmes alpha (mu) et bêta"
 )
@@ -27,41 +27,33 @@ st.markdown(
     """<div style="text-align: justify;">Nous avons appliqué les filtres CSP sur les epochs EEG, projetant les données dans un espace où les différences de variance entre les classes sont maximisées, facilitant l'extraction des composantes discriminantes. Après cela, nous avons calculé la variance de chaque composante filtrée et appliqué le logarithme de cette variance pour normaliser les valeurs et atténuer l'impact des grandes variations, afin d'obtenir des caractéristiques adaptées à la classification des intentions motrices.""",
     unsafe_allow_html=True,
 )
-img_psd = Image.open("./assets/EEGCSP.png")
-st.image(img_psd)
-st.html(
-    "<u>Signal EEG filtré CSP pour C3, Cz, et C4 avec en bleu event_0 (IM main gauche), et en rouge event_1 (IM main droite)</u>"
+insert_png("./assets/EEGCSP.png")
+insert_image_title(
+    "Signal EEG filtré CSP pour C3, Cz, et C4 avec en bleu event_0 (IM main gauche), et en rouge event_1 (IM main droite)"
 )
 
 st.markdown(
     """<div style="text-align: justify;">Nous avons également appliqué ce processus aux Power Spectral Densities (PSD). Pour chaque epoch EEG, nous avons d'abord calculé la PSD, puis utilisé les filtres CSP pour extraire les composantes discriminantes, avant de calculer le logarithme de la variance de ces composantes. Cela permet d'extraire des caractéristiques basées sur la puissance spectrale plutôt que sur l'activité brute du signal.""",
     unsafe_allow_html=True,
 )
-img_sds = Image.open("./assets/SDS.png")
-st.image(img_sds)
-st.html(
-    "<u>Signal de densité spectrale de puissance filtrré CSP de IM gauche (gauche) et im droite (droite) on voit que les PSD des canaux vert et bleu s’échangent en fonction de l’event</u>"
+insert_png("./assets/SDS.png")
+insert_image_title(
+    "Signal de densité spectrale de puissance filtrré CSP de IM gauche (gauche) et im droite (droite) on voit que les PSD des canaux vert et bleu s’échangent en fonction de l’event"
 )
 st.markdown(
     "Enfin, nous avons appliqué la pipeline sur l'amplitude par le temps (amp by time), qui analyse l'évolution de l'intensité du signal EEG au fil du temps"
 )
-img_amp = Image.open("./assets/amp.png")
-st.image(img_amp, width=600)
-st.html(
-    "<u>amp by time des 3 canaux en fonction de l’IM (ligne pleine, IM gauche et pointillée IM droite)</u>"
+insert_png("./assets/amp.png")
+insert_image_title(
+    "amp by time des 3 canaux en fonction de l’IM (ligne pleine, IM gauche et pointillée IM droite)"
 )
 st.markdown(
     """<div style="text-align: justify;">Pour les trois facteurs (CSP, PSD et amplitude par le temps), nous avons extrait trois composantes distinctes, permettant de capturer des caractéristiques discriminantes pour la classification des intentions motrices.""",
     unsafe_allow_html=True,
 )
-st.html(
-    "<u>amp by time des 3 canaux en fonction de l’IM (ligne pleine, IM gauche et pointillée IM droite)</u>"
-)
-img_carac = Image.open("./assets/caractM1.png")
-st.image(img_carac, width=600)
-
-st.html(
-    "<u>log var des CSP du signal brut, des PSD et de l’amp by time, moyenné par IM gauche (bleu) et droite (orange)</u>"
+insert_png("./assets/caractM1.png")
+insert_image_title(
+    "log var des CSP du signal brut, des PSD et de l’amp by time, moyenné par IM gauche (bleu) et droite (orange)"
 )
 st.markdown("## Modélisation")
 st.markdown(
@@ -73,11 +65,9 @@ Pour chaque modèle, la phase d'entraînement a été réalisée sur 80 % des do
 Nous avons appliqué les modèles sur l'ensemble des epochs disponibles, afin de capturer une vue d'ensemble complète des intentions motrices à travers toutes les données EEG. Par la suite, les modèles ont été ajustés en fonction des epochs utilisées lors des premières sessions de screening, puis de NF. Pour chaque condition expérimentale, les modèles ont été optimisés afin d'obtenir la meilleure précision possible.""",
     unsafe_allow_html=True,
 )
-img_accuracy = Image.open("./assets/accuracyM1.png")
-st.image(img_accuracy, width=600)
-
-st.html(
-    "<u>Accuracy des différents modèles en fonction du type de modèle et des condition expérimentales</u>"
+insert_png("./assets/accuracyM1.png")
+insert_image_title(
+    "Accuracy des différents modèles en fonction du type de modèle et des condition expérimentales"
 )
 
 st.markdown("## Analyse des résultats")

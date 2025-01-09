@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from utils.utils import insert_png
 
 st.markdown("# Discussion")
 st.markdown(
@@ -20,8 +20,7 @@ Dans notre étude, les sessions de screening correspondent aux deux premières s
     unsafe_allow_html=True,
 )
 
-img_spectro = Image.open("./assets/spectro.png")
-st.image(img_spectro)
+insert_png("./assets/spectro.png")
 st.html(
     "<u>(a) 50 premiers événements d’imagerie motrice (IM) de main gauche, (b) 50 derniers événements d’imagerie motrice (IM) de main gauche .</u>"
 )
