@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.utils import insert_png, insert_image_title
+from utils.utils import insert_png, insert_svg, insert_image_title
 
 st.markdown("# Méthode 1")
 st.markdown(
@@ -24,10 +24,10 @@ st.markdown(
     "Nous avons ensuite appliqué la technique du logarithmic variance (log-var) pour transformer les signaux CSP en valeurs plus distinctes et comparables"
 )
 st.markdown(
-    """<div style="text-align: justify;">Nous avons appliqué les filtres CSP sur les epochs EEG, projetant les données dans un espace où les différences de variance entre les classes sont maximisées, facilitant l'extraction des composantes discriminantes. Après cela, nous avons calculé la variance de chaque composante filtrée et appliqué le logarithme de cette variance pour normaliser les valeurs et atténuer l'impact des grandes variations, afin d'obtenir des caractéristiques adaptées à la classification des intentions motrices.""",
+    """<div style="text-align: justify;">Nous avons appliqué les filtres CSP sur les epochs EEG, projetant les données dans un espace où les différences de variance entre les classes sont maximisées, facilitant l'extraction des composantes discriminantes. Après cela, nous avons calculé la variance de chaque composante filtrée et appliqué le logarithme de cette variance pour normaliser les valeurs et atténuer l'impact des grandes variations, afin d'obtenir des caractéristiques adaptées à la classification des intentions motrices..<br><br>""",
     unsafe_allow_html=True,
 )
-insert_png("./assets/EEGCSP.png")
+insert_png("app/static/assets/images/EEGCSP3.png", "5%")
 insert_image_title(
     "Signal EEG filtré CSP pour C3, Cz, et C4 avec en bleu event_0 (IM main gauche), et en rouge event_1 (IM main droite)"
 )
@@ -36,22 +36,22 @@ st.markdown(
     """<div style="text-align: justify;">Nous avons également appliqué ce processus aux Power Spectral Densities (PSD). Pour chaque epoch EEG, nous avons d'abord calculé la PSD, puis utilisé les filtres CSP pour extraire les composantes discriminantes, avant de calculer le logarithme de la variance de ces composantes. Cela permet d'extraire des caractéristiques basées sur la puissance spectrale plutôt que sur l'activité brute du signal.""",
     unsafe_allow_html=True,
 )
-insert_png("./assets/SDS.png")
+insert_png("app/static/assets/images/SDS2.png", "5%")
 insert_image_title(
-    "Signal de densité spectrale de puissance filtrré CSP de IM gauche (gauche) et im droite (droite) on voit que les PSD des canaux vert et bleu s’échangent en fonction de l’event"
+    "Signal de densité spectrale de puissance filtré CSP de IM gauche (gauche) et im droite (droite) on voit que les PSD des canaux vert et bleu s’échangent en fonction de l’event"
 )
 st.markdown(
     "Enfin, nous avons appliqué la pipeline sur l'amplitude par le temps (amp by time), qui analyse l'évolution de l'intensité du signal EEG au fil du temps"
 )
-insert_png("./assets/amp.png")
+insert_png("app/static/assets/images/amp3.png", "5%")
 insert_image_title(
     "amp by time des 3 canaux en fonction de l’IM (ligne pleine, IM gauche et pointillée IM droite)"
 )
 st.markdown(
-    """<div style="text-align: justify;">Pour les trois facteurs (CSP, PSD et amplitude par le temps), nous avons extrait trois composantes distinctes, permettant de capturer des caractéristiques discriminantes pour la classification des intentions motrices.""",
+    """<div style="text-align: justify;">Pour les trois facteurs (CSP, PSD et amplitude par le temps), nous avons extrait trois composantes distinctes, permettant de capturer des caractéristiques discriminantes pour la classification des intentions motrices..<br><br>""",
     unsafe_allow_html=True,
 )
-insert_png("./assets/caractM1.png")
+insert_png("app/static/assets/images/log2.png", "5%")
 insert_image_title(
     "log var des CSP du signal brut, des PSD et de l’amp by time, moyenné par IM gauche (bleu) et droite (orange)"
 )
@@ -62,10 +62,10 @@ Dans ce processus, nous avons utilisé trois modèles de classification distinct
 Nous avons aussi utilisé un réseau de neurones convolutionnels (CNN) pour classifier les signaux EEG en fonction des caractéristiques extraites. Il comprend deux couches de convolution 1D pour extraire les caractéristiques des signaux, suivies d’une couche de Flatten pour aplatir les données et de couches densément connectées pour apprendre des représentations plus complexes. Une couche de Dropout est ajoutée pour éviter le surapprentissage. L'optimiseur Adam et la fonction de perte binary crossentropy sont utilisés pour l’entraînement. Un mécanisme d’early stopping arrête l’entraînement si la performance de validation ne s’améliore pas après un certain nombre d’époques.
 Chaque modèle a été testé sur différentes combinaisons de caractéristiques et a été appliqué à trois situations spécifiques:
 Pour chaque modèle, la phase d'entraînement a été réalisée sur 80 % des données, tandis que les 20 % restants ont été utilisés pour les tests. Cette répartition a été effectuée de manière aléatoire.
-Nous avons appliqué les modèles sur l'ensemble des epochs disponibles, afin de capturer une vue d'ensemble complète des intentions motrices à travers toutes les données EEG. Par la suite, les modèles ont été ajustés en fonction des epochs utilisées lors des premières sessions de screening, puis de NF. Pour chaque condition expérimentale, les modèles ont été optimisés afin d'obtenir la meilleure précision possible.""",
+Nous avons appliqué les modèles sur l'ensemble des epochs disponibles, afin de capturer une vue d'ensemble complète des intentions motrices à travers toutes les données EEG. Par la suite, les modèles ont été ajustés en fonction des epochs utilisées lors des premières sessions de screening, puis de NF. Pour chaque condition expérimentale, les modèles ont été optimisés afin d'obtenir la meilleure précision possible.<br><br>""",
     unsafe_allow_html=True,
 )
-insert_png("./assets/accuracyM1.png")
+insert_png("app/static/assets/images/accuracyM1.png")
 insert_image_title(
     "Accuracy des différents modèles en fonction du type de modèle et des condition expérimentales"
 )

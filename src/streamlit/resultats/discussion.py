@@ -20,7 +20,7 @@ Dans notre étude, les sessions de screening correspondent aux deux premières s
     unsafe_allow_html=True,
 )
 
-insert_png("./assets/spectro.png")
+insert_png("app/static/assets/images/spectro.png")
 st.html(
     "<u>(a) 50 premiers événements d’imagerie motrice (IM) de main gauche, (b) 50 derniers événements d’imagerie motrice (IM) de main gauche .</u>"
 )

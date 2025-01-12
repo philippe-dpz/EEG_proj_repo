@@ -30,9 +30,9 @@ st.markdown(
 )
 
 st.markdown("## Analyse des résultats")
-insert_svg("./assets/resultat1M3.svg")
-insert_svg("./assets/resultat2M3.svg")
-insert_svg("./assets/resultat3M3.svg")
+insert_svg("./static/assets/images/resultat1M3.svg")
+insert_svg("./static/assets/images/resultat2M3.svg")
+insert_svg("./static/assets/images/resultat3M3.svg")
 insert_image_title("Accuracy des différents modèles")
 st.markdown(
     """<div style="text-align: justify;">

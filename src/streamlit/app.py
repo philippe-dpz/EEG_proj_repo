@@ -52,7 +52,7 @@ def build_markup_for_logo(png_file: str) -> str:
 
 
 st.markdown(
-    build_markup_for_logo("assets/brain.jpg"),
+    build_markup_for_logo("./static/assets/images/brain.jpg"),
     unsafe_allow_html=True,
 )
 

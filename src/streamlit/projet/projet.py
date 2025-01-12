@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.utils import insert_png
+from utils.utils import insert_png, insert_image_title
 from pathlib import Path
 
 st.markdown("# Prédiction des Mouvements Imaginaires de la Main ")
@@ -34,8 +34,8 @@ st.markdown(
 st.markdown(
     "En plus des canaux EEG, l’électro-oculogramme (EOG) a été enregistré avec trois électrodes monopolaires (le mastoïde gauche servant de référence), en utilisant les mêmes réglages d’amplificateur."
 )
-insert_png("./assets/electrodes.png")
-st.markdown(
+insert_png("app/static/assets/images/electrodes.png")
+insert_image_title(
     "Configuration des électrodes de l’électroencéphalogramme (a), et de l’électrooculogramme (b)."
 )
 st.markdown(

@@ -3,15 +3,23 @@ from utils.utils import insert_png, insert_image_title
 
 st.markdown("# Analyse des données")
 st.markdown("## Visualisation des signaux bruts")
-insert_png("./assets/signals.png")
-insert_image_title(
-    "EEG brut sur 35 secondes (a) et sur 1 seconde (b). <br>Dans le signal (a) on observe l’activité cérébrale de deux epochs : un de l’IM gauche, un de l’IM droite."
-)
+
+left_co, right_co = st.columns(2)
+with left_co:
+    insert_png("app/static/assets/images/signalB35.png")
+    insert_image_title(
+        "EEG brut sur 25 secondes. <br>Dans le signal (a) on observe l’activité cérébrale de deux epochs : un de l’IM gauche, un de l’IM droite."
+    )
+with right_co:
+    st.markdown('')
+    insert_png("app/static/assets/images/signalB1.png")
+    insert_image_title("EEG brut sur 1 seconde.")
+
 st.markdown("## Puissance du signal")
-insert_png("./assets/psd.png")
+insert_png("app/static/assets/images/psdB.png")
 insert_image_title("Puissance du signal brut sur une session.")
 st.markdown("## Comparaison par classe")
-insert_png("./assets/signals_comparaison.png")
+insert_png("app/static/assets/images/signalsComparaison.png")
 insert_image_title("Comparaison des signaux moyens par type de tentative")
 
 st.markdown(

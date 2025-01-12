@@ -19,12 +19,22 @@ def insert_svg(path: str):
     st.write(html, unsafe_allow_html=True)
 
 
-def insert_png(path: str):
-    left_co, cent_co, last_co = st.columns([0.1, 0.8, 0.1])
-    with cent_co:
-        img = Image.open(path)
-        st.image(img, width=600)
-    st.columns(1)
+def insert_png(path: str, margin='0%'):
+    css_justify = "center"
+    css = '<p style="text-align:center; display: flex; justify-content: {}; margin-right: {}; margin-left: {}">'.format(
+        css_justify,
+        margin,
+        margin
+    )
+    html = r'{}<img src="{}"/>'.format(
+        css, path)
+    st.write(html, unsafe_allow_html=True)
+
+#    left_co, cent_co, last_co = st.columns([0.1, 0.8, 0.1])
+#    with cent_co:
+#        img = Image.open(path)
+#        st.image(img)
+#    st.columns(1)
 
 
 def insert_image_title(title: str):
