@@ -8,8 +8,8 @@ import glob
 # ---------------------- CONSTANTES -----------------------
 TRAIN_PATH = "../../data/raw/train/"
 TRAIN_ONLY_PATH = "../../data/raw/y_train_only/"
-MODELS_PATH = "../../models/"
-MODELS_TEST_PATH = "../../models/test/"
+MODELS_PATH = "./"
+MODELS_TEST_PATH = "./test/"
 
 SAMPLING_FREQ = 250
 STICHANNEL = "STI101"
@@ -203,7 +203,7 @@ def plot_eeg_topomap_animation(
 ):
     conditions = ["1", "2"]
     evoked = {
-        c: epochs[c].set_eeg_reference(ref_channels=["Cz"]).average()
+        c: epochs[c].set_eeg_reference().average()
         for c in conditions
     }
     if save_filename_animation:
