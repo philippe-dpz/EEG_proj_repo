@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.utils import insert_png
+from utils.utils import insert_png, insert_image_title
 
 st.markdown("# Méthode 2")
 
@@ -32,8 +32,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 insert_png("app/static/assets/images/psd2.png", "5%")
-st.html(
-    "<u>PSD entre 1 et 3 secondes sur la plage de fréquence 10.5 - 12.5Hz. Une différence nette entre le PSD de l’IM main gauche et droite est observable notamment pour les canaux C3 et C4.</u>"
+insert_image_title(
+    "PSD entre 1 et 3 secondes sur la plage de fréquence 10.5 - 12.5Hz. Une différence nette entre le PSD de l’IM main gauche et droite est observable notamment pour les canaux C3 et C4."
 )
 st.markdown(
     """<div style="text-align: justify;">Les meilleurs résultats sont obtenus sur la plage de fréquences 10.5 - 12.5Hz et sur l’intervalle 1s - 3s""",
@@ -68,4 +68,3 @@ st.dataframe(
     ),
     hide_index=True,
 )
-
