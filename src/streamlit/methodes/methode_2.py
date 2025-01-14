@@ -23,7 +23,7 @@ L’exploration des différentes valeurs de signal, pour les différents candida
 st.markdown("## Extraction de caractéristiques")
 st.markdown(
     """<div style="text-align: justify;">
-Nous nous plaçons dans un espace Fréquence/Temps grâce au calcul TFR (revient à calculer le PSD en gardant la notion de temporalité). L’analyse des données nous incite à retenir les fréquences de la gamme alpha. Nous nous intéresserons à la différence entre C3 et C4.""",
+Nous nous plaçons dans un espace Fréquence/Temps grâce au calcul TFR (revient à calculer le PSD en gardant la notion de temporalité). L’analyse des données nous incite à retenir les fréquences de la gamme  (8Hz, 14Hz). Nous nous intéresserons à la différence entre C3 et C4.""",
     unsafe_allow_html=True,
 )
 st.markdown("## Modélisation")
