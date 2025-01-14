@@ -28,7 +28,7 @@ Nous nous plaçons dans un espace Fréquence/Temps grâce au calcul TFR (revient
 )
 st.markdown("## Modélisation")
 st.markdown(
-    """<div style="text-align: justify;">Le jeu d'entraînement est constitué par les enregistrements des candidats 1 à 7, le jeu de test par ceux des candidats 8 et 9, ce choix est fait de façon arbitraire.Nous entraînons différents modèles, LogisticRegression, AdaBoostClassifier, SVM sur le jeu de données. A la vue des premiers résultats SVM ne semble pas adapté. Afin d'améliorer les performances, nous modifions les paramètres max_iter pour LogistiqueRegression et faisons un GridSearch sur AdaBoostClassifier. Nous effectuons également des entraînements sur une fenêtre temporelle glissante sur chaque époque. Ensuite nous essayons de réduire les fréquences utilisées.<br><br>""",
+    """<div style="text-align: justify;">Le jeu d'entraînement est constitué par les enregistrements des candidats 1 à 7, le jeu de test par ceux des candidats 8 et 9, ce choix est fait de façon arbitraire.Nous entraînons différents modèles, LogisticRegression, AdaBoostClassifier, RandomForestClassifier, SVM sur le jeu de données. A la vue des premiers résultats SVM ne semble pas adapté. Afin d'améliorer les performances, nous modifions les paramètres max_iter pour LogistiqueRegression et faisons un GridSearch sur AdaBoostClassifier. Nous effectuons également des entraînements sur une fenêtre temporelle glissante sur chaque époque. Ensuite nous essayons de réduire les fréquences utilisées.<br><br>""",
     unsafe_allow_html=True,
 )
 insert_png("app/static/assets/images/psd2.png", "5%")
