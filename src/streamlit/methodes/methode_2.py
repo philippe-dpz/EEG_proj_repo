@@ -42,7 +42,7 @@ st.markdown(
 
 st.markdown("## Analyse des résultats")
 st.markdown("- LogisticRegression")
-st.markdown("score: 0. 0.806")
+st.markdown("score: 0.806")
 st.dataframe(
     pd.DataFrame(
         columns=["classe", "précision", "recall", "f1-score"],
