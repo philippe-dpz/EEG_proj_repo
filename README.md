@@ -18,9 +18,8 @@ The dataset used in this project is **raw EEG data** from the **BCI Competition 
 You can download the dataset from Kaggle: [UCSD Neural Data Challenge](https://www.kaggle.com/competitions/ucsd-neural-data-challenge/data).
 
 ### Key Features:
-- Continuous and epoched neural data from EEG recordings.
+- Raw neural data from EEG recordings.
 - Data collected from subjects performing motor imagery tasks (left vs. right-hand movement).
-- The dataset can be used to build classification models to predict whether a subject is thinking about left or right-hand movement.
 
 Project Organization
 ------------
