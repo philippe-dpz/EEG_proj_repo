@@ -14,9 +14,7 @@ Project Organization
     │   ├── nf_model_2.ipynb
     │   └── screening_model_2.ipynb
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's name, and a short `-` delimited description, e.g.
-    │                         `1.0-alban-data-exploration`.
+    ├── notebooks          
     │   ├── preprocessing_propre.ipynb
     │   └── vis_propre.ipynb
     │
@@ -24,22 +22,8 @@ Project Organization
     │   ├── report.pdf
     │   └── references.pdf
     │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   ├── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │   │   └── visualize.py
+    ├── requirements.txt
+
 
 --------
 
